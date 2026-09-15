@@ -25,6 +25,8 @@ import ExpenseNewPage from '@/features/expenses/ExpenseNewPage';
 import DeliveryListPage from '@/features/deliveries/DeliveryListPage';
 import DeliveryNewPage from '@/features/deliveries/DeliveryNewPage';
 import DeliveryDetailPage from '@/features/deliveries/DeliveryDetailPage';
+import SalesOverviewPage from '@/features/sales/SalesOverviewPage';
+import DashboardPage from '@/features/dashboard/DashboardPage';
 
 function Placeholder({ name }: { name: string }) {
   return (
@@ -47,8 +49,8 @@ export default function App() {
 
         {/* Protected routes */}
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="/dashboard" element={<ProtectedRoute><Placeholder name="Dashboard" /></ProtectedRoute>} />
-        <Route path="/sales" element={<ProtectedRoute><Placeholder name="Sales" /></ProtectedRoute>} />
+        <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+        <Route path="/sales" element={<ProtectedRoute><SalesOverviewPage /></ProtectedRoute>} />
         <Route path="/products" element={<ProtectedRoute><ProductListPage /></ProtectedRoute>} />
         <Route path="/products/new" element={<ProtectedRoute><ProductNewPage /></ProtectedRoute>} />
         <Route path="/products/:id" element={<ProtectedRoute><ProductDetailPage /></ProtectedRoute>} />
