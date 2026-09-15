@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { formatCurrency } from '@/lib/utils';
+import { X } from 'lucide-react';
 import type { Customer, Product } from '@/types';
 
 interface LineItem {
@@ -140,7 +141,7 @@ export default function EstimateNewPage() {
                   className="flex-1 rounded-md border bg-background px-2 py-1.5 text-sm"
                   required
                 />
-                <button type="button" onClick={() => removeItem(i)} className="text-destructive text-sm">✕</button>
+                <button type="button" onClick={() => removeItem(i)} className="text-destructive" aria-label="Remove item"><X className="h-4 w-4" /></button>
               </div>
               <div className="grid grid-cols-5 gap-2">
                 <input type="number" min="1" value={item.quantity} onChange={(e) => updateItem(i, 'quantity', Number(e.target.value))} placeholder="Qty" className="rounded-md border bg-background px-2 py-1.5 text-sm" />

@@ -1,26 +1,31 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import NotificationBell from './NotificationBell';
+import {
+  LayoutDashboard, Briefcase, Users, Package, FileText,
+  Receipt, Banknote, TrendingDown, Truck, BarChart3,
+  Settings, LogOut,
+} from 'lucide-react';
 
 const navItems = [
-  { to: '/dashboard', label: 'Dashboard', icon: '📊' },
-  { to: '/sales', label: 'Sales', icon: '💼' },
-  { to: '/customers', label: 'Customers', icon: '👥' },
-  { to: '/products', label: 'Products', icon: '📦' },
-  { to: '/estimates', label: 'Estimates', icon: '📄' },
-  { to: '/invoices', label: 'Invoices', icon: '🧾' },
-  { to: '/payments', label: 'Payments', icon: '💰' },
-  { to: '/expenses', label: 'Expenses', icon: '📉' },
-  { to: '/deliveries', label: 'Deliveries', icon: '🚚' },
-  { to: '/reports', label: 'Reports', icon: '📈' },
+  { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { to: '/sales', label: 'Sales', icon: Briefcase },
+  { to: '/customers', label: 'Customers', icon: Users },
+  { to: '/products', label: 'Products', icon: Package },
+  { to: '/estimates', label: 'Estimates', icon: FileText },
+  { to: '/invoices', label: 'Invoices', icon: Receipt },
+  { to: '/payments', label: 'Payments', icon: Banknote },
+  { to: '/expenses', label: 'Expenses', icon: TrendingDown },
+  { to: '/deliveries', label: 'Deliveries', icon: Truck },
+  { to: '/reports', label: 'Reports', icon: BarChart3 },
 ];
 
 const mobileNavItems = [
-  { to: '/dashboard', label: 'Home', icon: '📊' },
-  { to: '/sales', label: 'Sales', icon: '💼' },
-  { to: '/customers', label: 'Customers', icon: '👥' },
-  { to: '/invoices', label: 'Invoices', icon: '🧾' },
-  { to: '/reports', label: 'Reports', icon: '📈' },
+  { to: '/dashboard', label: 'Home', icon: LayoutDashboard },
+  { to: '/sales', label: 'Sales', icon: Briefcase },
+  { to: '/customers', label: 'Customers', icon: Users },
+  { to: '/invoices', label: 'Invoices', icon: Receipt },
+  { to: '/reports', label: 'Reports', icon: BarChart3 },
 ];
 
 export default function Layout({ children }: { children: React.ReactNode }) {
@@ -45,20 +50,20 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 }`
               }
             >
-              <span>{item.icon}</span>
+              <item.icon className="h-4 w-4 shrink-0" />
               {item.label}
             </NavLink>
           ))}
         </nav>
         <div className="border-t p-3">
           <NavLink to="/settings" className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium hover:bg-accent">
-            <span>⚙️</span> Settings
+            <Settings className="h-4 w-4" /> Settings
           </NavLink>
           <button
             onClick={() => { logout(); navigate('/login'); }}
             className="w-full flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium hover:bg-accent text-muted-foreground"
           >
-            <span>🚪</span> Logout
+            <LogOut className="h-4 w-4" /> Logout
           </button>
         </div>
       </aside>
@@ -91,7 +96,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               }`
             }
           >
-            <span className="text-lg">{item.icon}</span>
+            <item.icon className="h-5 w-5" />
             {item.label}
           </NavLink>
         ))}

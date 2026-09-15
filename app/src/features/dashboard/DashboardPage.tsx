@@ -242,7 +242,7 @@ export default function DashboardPage() {
               </div>
             ))}
             {(!outstanding || outstanding.invoices.length === 0) && (
-              <p className="px-4 py-6 text-center text-sm text-muted-foreground">No unpaid invoices 🎉</p>
+              <p className="px-4 py-6 text-center text-sm text-muted-foreground">No unpaid invoices</p>
             )}
           </div>
           {outstanding && outstanding.invoices.length > 0 && (

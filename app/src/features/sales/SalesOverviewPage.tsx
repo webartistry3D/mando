@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { formatCurrency } from '@/lib/utils';
+import { FileText, Receipt, Banknote, Truck, Plus } from 'lucide-react';
 
 interface SalesOverview {
   recentEstimates: Array<{ id: string; number: string; status: string; total: number; createdAt: string; customer?: { name: string } | null }>;
@@ -25,22 +26,20 @@ export default function SalesOverviewPage() {
 
       {/* Quick actions */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-        <Link to="/estimates/new" className="rounded-lg border bg-card p-4 text-center hover:bg-accent/50 transition-colors">
-          <p className="text-2xl mb-1">📄</p>
-          <p className="text-sm font-medium">New Estimate</p>
-        </Link>
-        <Link to="/invoices/new" className="rounded-lg border bg-card p-4 text-center hover:bg-accent/50 transition-colors">
-          <p className="text-2xl mb-1">🧾</p>
-          <p className="text-sm font-medium">New Invoice</p>
-        </Link>
-        <Link to="/payments/new" className="rounded-lg border bg-card p-4 text-center hover:bg-accent/50 transition-colors">
-          <p className="text-2xl mb-1">💰</p>
-          <p className="text-sm font-medium">Record Payment</p>
-        </Link>
-        <Link to="/deliveries/new" className="rounded-lg border bg-card p-4 text-center hover:bg-accent/50 transition-colors">
-          <p className="text-2xl mb-1">🚚</p>
-          <p className="text-sm font-medium">New Delivery</p>
-        </Link>
+        {[
+          { to: '/estimates/new', icon: FileText, label: 'New Estimate', accent: 'text-violet-600 bg-violet-500/10' },
+          { to: '/invoices/new', icon: Receipt, label: 'New Invoice', accent: 'text-blue-600 bg-blue-500/10' },
+          { to: '/payments/new', icon: Banknote, label: 'Record Payment', accent: 'text-emerald-600 bg-emerald-500/10' },
+          { to: '/deliveries/new', icon: Truck, label: 'New Delivery', accent: 'text-amber-600 bg-amber-500/10' },
+        ].map(({ to, icon: Icon, label, accent }) => (
+          <Link key={label} to={to} className="group flex flex-col items-center gap-2 rounded-xl border bg-card p-4 transition-all hover:shadow-md hover:-translate-y-0.5">
+            <span className={`relative rounded-lg p-2 ${accent}`}>
+              <Icon className="h-5 w-5" />
+              <Plus className="absolute -right-1 -top-1 h-3 w-3 rounded-full bg-card" />
+            </span>
+            <span className="text-xs font-medium">{label}</span>
+          </Link>
+        ))}
       </div>
 
       {/* Summary */}
