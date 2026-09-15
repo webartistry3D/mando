@@ -27,17 +27,7 @@ import DeliveryNewPage from '@/features/deliveries/DeliveryNewPage';
 import DeliveryDetailPage from '@/features/deliveries/DeliveryDetailPage';
 import SalesOverviewPage from '@/features/sales/SalesOverviewPage';
 import DashboardPage from '@/features/dashboard/DashboardPage';
-
-function Placeholder({ name }: { name: string }) {
-  return (
-    <div className="flex min-h-screen items-center justify-center">
-      <div className="text-center">
-        <h1 className="text-2xl font-bold">{name}</h1>
-        <p className="text-muted-foreground mt-2">Coming soon</p>
-      </div>
-    </div>
-  );
-}
+import ReportsPage from '@/features/reports/ReportsPage';
 
 export default function App() {
   return (
@@ -71,7 +61,7 @@ export default function App() {
         <Route path="/deliveries" element={<ProtectedRoute><DeliveryListPage /></ProtectedRoute>} />
         <Route path="/deliveries/new" element={<ProtectedRoute><DeliveryNewPage /></ProtectedRoute>} />
         <Route path="/deliveries/:id" element={<ProtectedRoute><DeliveryDetailPage /></ProtectedRoute>} />
-        <Route path="/reports" element={<ProtectedRoute><Placeholder name="Reports" /></ProtectedRoute>} />
+        <Route path="/reports" element={<ProtectedRoute><ReportsPage /></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
         <Route path="/settings/business" element={<ProtectedRoute><BusinessSettingsPage /></ProtectedRoute>} />
         <Route path="/settings/users" element={<ProtectedRoute><UserManagementPage /></ProtectedRoute>} />
