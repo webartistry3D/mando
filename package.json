@@ -1,0 +1,23 @@
+{
+  "name": "mando",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Mando - Nigerian SME Business Operations PWA",
+  "workspaces": ["app", "api"],
+  "scripts": {
+    "dev": "npm run dev --workspaces --if-present",
+    "dev:api": "npm run dev --workspace @mando/api",
+    "dev:app": "npm run dev --workspace @mando/app",
+    "build": "npm run build --workspaces --if-present",
+    "build:api": "npm run build --workspace @mando/api",
+    "build:app": "npm run build --workspace @mando/app",
+    "db:migrate": "npm run db:migrate --workspace @mando/api",
+    "db:seed": "npm run db:seed --workspace @mando/api",
+    "db:studio": "npm run db:studio --workspace @mando/api",
+    "test": "npm run test --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
