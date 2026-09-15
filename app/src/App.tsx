@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
+import Layout from '@/components/Layout';
 import LoginPage from '@/features/auth/LoginPage';
 import RegisterPage from '@/features/auth/RegisterPage';
 import SettingsPage from '@/features/settings/SettingsPage';
@@ -39,32 +40,32 @@ export default function App() {
 
         {/* Protected routes */}
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
-        <Route path="/sales" element={<ProtectedRoute><SalesOverviewPage /></ProtectedRoute>} />
-        <Route path="/products" element={<ProtectedRoute><ProductListPage /></ProtectedRoute>} />
-        <Route path="/products/new" element={<ProtectedRoute><ProductNewPage /></ProtectedRoute>} />
-        <Route path="/products/:id" element={<ProtectedRoute><ProductDetailPage /></ProtectedRoute>} />
-        <Route path="/customers" element={<ProtectedRoute><CustomerListPage /></ProtectedRoute>} />
-        <Route path="/customers/new" element={<ProtectedRoute><CustomerNewPage /></ProtectedRoute>} />
-        <Route path="/customers/:id" element={<ProtectedRoute><CustomerDetailPage /></ProtectedRoute>} />
-        <Route path="/estimates" element={<ProtectedRoute><EstimateListPage /></ProtectedRoute>} />
-        <Route path="/estimates/new" element={<ProtectedRoute><EstimateNewPage /></ProtectedRoute>} />
-        <Route path="/estimates/:id" element={<ProtectedRoute><EstimateDetailPage /></ProtectedRoute>} />
-        <Route path="/invoices" element={<ProtectedRoute><InvoiceListPage /></ProtectedRoute>} />
-        <Route path="/invoices/new" element={<ProtectedRoute><InvoiceNewPage /></ProtectedRoute>} />
-        <Route path="/invoices/:id" element={<ProtectedRoute><InvoiceDetailPage /></ProtectedRoute>} />
-        <Route path="/payments" element={<ProtectedRoute><PaymentListPage /></ProtectedRoute>} />
-        <Route path="/payments/new" element={<ProtectedRoute><PaymentNewPage /></ProtectedRoute>} />
-        <Route path="/payments/:id" element={<ProtectedRoute><PaymentDetailPage /></ProtectedRoute>} />
-        <Route path="/expenses" element={<ProtectedRoute><ExpenseListPage /></ProtectedRoute>} />
-        <Route path="/expenses/new" element={<ProtectedRoute><ExpenseNewPage /></ProtectedRoute>} />
-        <Route path="/deliveries" element={<ProtectedRoute><DeliveryListPage /></ProtectedRoute>} />
-        <Route path="/deliveries/new" element={<ProtectedRoute><DeliveryNewPage /></ProtectedRoute>} />
-        <Route path="/deliveries/:id" element={<ProtectedRoute><DeliveryDetailPage /></ProtectedRoute>} />
-        <Route path="/reports" element={<ProtectedRoute><ReportsPage /></ProtectedRoute>} />
-        <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
-        <Route path="/settings/business" element={<ProtectedRoute><BusinessSettingsPage /></ProtectedRoute>} />
-        <Route path="/settings/users" element={<ProtectedRoute><UserManagementPage /></ProtectedRoute>} />
+        <Route path="/dashboard" element={<ProtectedRoute><Layout><DashboardPage /></Layout></ProtectedRoute>} />
+        <Route path="/sales" element={<ProtectedRoute><Layout><SalesOverviewPage /></Layout></ProtectedRoute>} />
+        <Route path="/products" element={<ProtectedRoute><Layout><ProductListPage /></Layout></ProtectedRoute>} />
+        <Route path="/products/new" element={<ProtectedRoute><Layout><ProductNewPage /></Layout></ProtectedRoute>} />
+        <Route path="/products/:id" element={<ProtectedRoute><Layout><ProductDetailPage /></Layout></ProtectedRoute>} />
+        <Route path="/customers" element={<ProtectedRoute><Layout><CustomerListPage /></Layout></ProtectedRoute>} />
+        <Route path="/customers/new" element={<ProtectedRoute><Layout><CustomerNewPage /></Layout></ProtectedRoute>} />
+        <Route path="/customers/:id" element={<ProtectedRoute><Layout><CustomerDetailPage /></Layout></ProtectedRoute>} />
+        <Route path="/estimates" element={<ProtectedRoute><Layout><EstimateListPage /></Layout></ProtectedRoute>} />
+        <Route path="/estimates/new" element={<ProtectedRoute><Layout><EstimateNewPage /></Layout></ProtectedRoute>} />
+        <Route path="/estimates/:id" element={<ProtectedRoute><Layout><EstimateDetailPage /></Layout></ProtectedRoute>} />
+        <Route path="/invoices" element={<ProtectedRoute><Layout><InvoiceListPage /></Layout></ProtectedRoute>} />
+        <Route path="/invoices/new" element={<ProtectedRoute><Layout><InvoiceNewPage /></Layout></ProtectedRoute>} />
+        <Route path="/invoices/:id" element={<ProtectedRoute><Layout><InvoiceDetailPage /></Layout></ProtectedRoute>} />
+        <Route path="/payments" element={<ProtectedRoute><Layout><PaymentListPage /></Layout></ProtectedRoute>} />
+        <Route path="/payments/new" element={<ProtectedRoute><Layout><PaymentNewPage /></Layout></ProtectedRoute>} />
+        <Route path="/payments/:id" element={<ProtectedRoute><Layout><PaymentDetailPage /></Layout></ProtectedRoute>} />
+        <Route path="/expenses" element={<ProtectedRoute><Layout><ExpenseListPage /></Layout></ProtectedRoute>} />
+        <Route path="/expenses/new" element={<ProtectedRoute><Layout><ExpenseNewPage /></Layout></ProtectedRoute>} />
+        <Route path="/deliveries" element={<ProtectedRoute><Layout><DeliveryListPage /></Layout></ProtectedRoute>} />
+        <Route path="/deliveries/new" element={<ProtectedRoute><Layout><DeliveryNewPage /></Layout></ProtectedRoute>} />
+        <Route path="/deliveries/:id" element={<ProtectedRoute><Layout><DeliveryDetailPage /></Layout></ProtectedRoute>} />
+        <Route path="/reports" element={<ProtectedRoute><Layout><ReportsPage /></Layout></ProtectedRoute>} />
+        <Route path="/settings" element={<ProtectedRoute><Layout><SettingsPage /></Layout></ProtectedRoute>} />
+        <Route path="/settings/business" element={<ProtectedRoute><Layout><BusinessSettingsPage /></Layout></ProtectedRoute>} />
+        <Route path="/settings/users" element={<ProtectedRoute><Layout><UserManagementPage /></Layout></ProtectedRoute>} />
       </Routes>
     </BrowserRouter>
   );

@@ -15,6 +15,8 @@ import deliveryRoutes from './routes/deliveries.js';
 import salesRoutes from './routes/sales.js';
 import dashboardRoutes from './routes/dashboard.js';
 import reportRoutes from './routes/reports.js';
+import attachmentRoutes from './routes/attachments.js';
+import notificationRoutes from './routes/notifications.js';
 import { prisma } from './lib/prisma.js';
 
 const app = express();
@@ -46,6 +48,8 @@ app.use('/api/v1/deliveries', deliveryRoutes);
 app.use('/api/v1/sales', salesRoutes);
 app.use('/api/v1/dashboard', dashboardRoutes);
 app.use('/api/v1/reports', reportRoutes);
+app.use('/api/v1/attachments', attachmentRoutes);
+app.use('/api/v1/notifications', notificationRoutes);
 
 // Global error handler (Zod errors, etc.)
 app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {

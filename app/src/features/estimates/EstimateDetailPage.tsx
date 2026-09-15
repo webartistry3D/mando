@@ -2,7 +2,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { formatCurrency, formatDate } from '@/lib/utils';
-import type { Estimate } from '@/types';
+import { generateEstimatePDF } from '@/lib/pdf';
+import type { Estimate, Business } from '@/types';
 
 const statusColors: Record<string, string> = {
   DRAFT: 'bg-gray-100 text-gray-700',
@@ -23,6 +24,11 @@ export default function EstimateDetailPage() {
     queryKey: ['estimate', id],
     queryFn: () => api.get<Estimate>(`/estimates/${id}`),
     enabled: !!id,
+  });
+
+  const { data: business } = useQuery({
+    queryKey: ['business'],
+    queryFn: () => api.get<Business>('/business'),
   });
 
   const updateStatus = useMutation({
@@ -60,6 +66,20 @@ export default function EstimateDetailPage() {
           </p>
         </div>
         <div className="flex gap-2">
+          <button
+            onClick={() => business && estimate && generateEstimatePDF(estimate, business)}
+            className="rounded-md border px-3 py-2 text-sm font-medium"
+          >
+            Download PDF
+          </button>
+          <a
+            href={`https://wa.me/?text=${encodeURIComponent(`Estimate ${estimate.number}\nTotal: ₦${Number(estimate.total).toLocaleString()}\n${estimate.customer?.name || ''}\n${estimate.expiryDate ? `Valid until ${formatDate(estimate.expiryDate)}` : ''}`)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="rounded-md border border-green-300 bg-green-50 px-3 py-2 text-sm font-medium text-green-700"
+          >
+            WhatsApp
+          </a>
           {isDraft && (
             <button onClick={() => updateStatus.mutate('SENT')} className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white">
               Mark Sent

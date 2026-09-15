@@ -2,7 +2,8 @@ import { useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { formatCurrency, formatDate } from '@/lib/utils';
-import type { Invoice } from '@/types';
+import { generateInvoicePDF } from '@/lib/pdf';
+import type { Invoice, Business } from '@/types';
 
 const statusColors: Record<string, string> = {
   DRAFT: 'bg-gray-100 text-gray-700',
@@ -21,6 +22,11 @@ export default function InvoiceDetailPage() {
     queryKey: ['invoice', id],
     queryFn: () => api.get<Invoice>(`/invoices/${id}`),
     enabled: !!id,
+  });
+
+  const { data: business } = useQuery({
+    queryKey: ['business'],
+    queryFn: () => api.get<Business>('/business'),
   });
 
   const issue = useMutation({
@@ -61,6 +67,20 @@ export default function InvoiceDetailPage() {
           </p>
         </div>
         <div className="flex gap-2">
+          <button
+            onClick={() => business && invoice && generateInvoicePDF(invoice, business)}
+            className="rounded-md border px-3 py-2 text-sm font-medium"
+          >
+            Download PDF
+          </button>
+          <a
+            href={`https://wa.me/${invoice.customer?.phone?.replace(/\D/g, '') || ''}?text=${encodeURIComponent(`Invoice ${invoice.number}\nTotal: ₦${Number(invoice.total).toLocaleString()}\nBalance: ₦${Number(invoice.balanceDue).toLocaleString()}${invoice.dueDate ? `\nDue: ${formatDate(invoice.dueDate)}` : ''}\n${invoice.paymentInstructions || ''}`)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="rounded-md border border-green-300 bg-green-50 px-3 py-2 text-sm font-medium text-green-700"
+          >
+            WhatsApp
+          </a>
           {isDraft && (
             <button onClick={() => issue.mutate()} className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white">
               Issue Invoice

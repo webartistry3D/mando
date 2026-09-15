@@ -8,6 +8,24 @@ export interface User {
 export interface Business {
   id: string;
   name: string;
+  logoAttachmentId?: string | null;
+  cacNumber?: string | null;
+  address?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  settings?: BusinessSettings;
+}
+
+export interface BusinessSettings {
+  id: string;
+  businessId: string;
+  currency: string;
+  invoicePrefix: string;
+  estimatePrefix: string;
+  deliveryPrefix: string;
+  taxEnabled: boolean;
+  taxRate: string;
+  paymentInstructions?: string | null;
 }
 
 export interface Membership {
@@ -191,4 +209,15 @@ export interface DeliveryItem {
   productId?: string | null;
   description: string;
   quantity: number;
+}
+
+export interface Notification {
+  id: string;
+  businessId: string;
+  userId?: string | null;
+  type: string;
+  title: string;
+  message: string;
+  isRead: boolean;
+  createdAt: string;
 }
