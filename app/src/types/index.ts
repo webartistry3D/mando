@@ -76,3 +76,119 @@ export interface Customer {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface EstimateItem {
+  id?: string;
+  productId?: string | null;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  discount: number;
+  tax: number;
+  lineTotal?: number;
+}
+
+export interface Estimate {
+  id: string;
+  businessId: string;
+  customerId: string;
+  number: string;
+  status: 'DRAFT' | 'SENT' | 'VIEWED' | 'ACCEPTED' | 'REJECTED' | 'EXPIRED' | 'CONVERTED';
+  issueDate: string;
+  expiryDate?: string | null;
+  subtotal: number;
+  discount: number;
+  tax: number;
+  total: number;
+  notes?: string | null;
+  terms?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  customer?: Customer;
+  items?: EstimateItem[];
+  invoices?: Invoice[];
+}
+
+export interface InvoiceItem {
+  id?: string;
+  productId?: string | null;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  discount: number;
+  tax: number;
+  lineTotal?: number;
+}
+
+export interface Invoice {
+  id: string;
+  businessId: string;
+  customerId?: string | null;
+  estimateId?: string | null;
+  number: string;
+  status: 'DRAFT' | 'ISSUED' | 'PARTIALLY_PAID' | 'PAID' | 'OVERDUE' | 'CANCELLED';
+  issueDate: string;
+  dueDate?: string | null;
+  subtotal: number;
+  discount: number;
+  tax: number;
+  total: number;
+  amountPaid: number;
+  balanceDue: number;
+  notes?: string | null;
+  paymentInstructions?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  customer?: Customer | null;
+  items?: InvoiceItem[];
+  payments?: Payment[];
+  deliveries?: Delivery[];
+}
+
+export interface Payment {
+  id: string;
+  businessId: string;
+  invoiceId?: string | null;
+  customerId?: string | null;
+  amount: number;
+  paymentMethod: 'BANK_TRANSFER' | 'POS' | 'CASH' | 'CARD' | 'OTHER';
+  paymentDate: string;
+  reference?: string | null;
+  description?: string | null;
+  notes?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  invoice?: { id: string; number: string; total: number; status: string; balanceDue: number };
+  customer?: { id: string; name: string; phone?: string | null; email?: string | null };
+}
+
+export interface Delivery {
+  id: string;
+  businessId: string;
+  invoiceId?: string | null;
+  customerId?: string | null;
+  number: string;
+  deliveryAddress?: string | null;
+  recipientName?: string | null;
+  recipientPhone?: string | null;
+  deliveryFee: number;
+  assignedPerson?: string | null;
+  trackingReference?: string | null;
+  status: 'PENDING' | 'PROCESSING' | 'OUT_FOR_DELIVERY' | 'DELIVERED' | 'FAILED' | 'CANCELLED';
+  notes?: string | null;
+  deliveredAt?: string | null;
+  recipientConfirmation?: string | null;
+  proofPhotoAttachmentId?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  items?: DeliveryItem[];
+  invoice?: { id: string; number: string; total: number };
+  customer?: { id: string; name: string; phone?: string | null };
+}
+
+export interface DeliveryItem {
+  id?: string;
+  productId?: string | null;
+  description: string;
+  quantity: number;
+}

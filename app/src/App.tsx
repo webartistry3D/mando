@@ -11,6 +11,15 @@ import CustomerDetailPage from '@/features/customers/CustomerDetailPage';
 import ProductListPage from '@/features/products/ProductListPage';
 import ProductNewPage from '@/features/products/ProductNewPage';
 import ProductDetailPage from '@/features/products/ProductDetailPage';
+import EstimateListPage from '@/features/estimates/EstimateListPage';
+import EstimateNewPage from '@/features/estimates/EstimateNewPage';
+import EstimateDetailPage from '@/features/estimates/EstimateDetailPage';
+import InvoiceListPage from '@/features/invoices/InvoiceListPage';
+import InvoiceNewPage from '@/features/invoices/InvoiceNewPage';
+import InvoiceDetailPage from '@/features/invoices/InvoiceDetailPage';
+import PaymentListPage from '@/features/payments/PaymentListPage';
+import PaymentNewPage from '@/features/payments/PaymentNewPage';
+import PaymentDetailPage from '@/features/payments/PaymentDetailPage';
 
 function Placeholder({ name }: { name: string }) {
   return (
@@ -41,15 +50,15 @@ export default function App() {
         <Route path="/customers" element={<ProtectedRoute><CustomerListPage /></ProtectedRoute>} />
         <Route path="/customers/new" element={<ProtectedRoute><CustomerNewPage /></ProtectedRoute>} />
         <Route path="/customers/:id" element={<ProtectedRoute><CustomerDetailPage /></ProtectedRoute>} />
-        <Route path="/estimates" element={<ProtectedRoute><Placeholder name="Estimates" /></ProtectedRoute>} />
-        <Route path="/estimates/new" element={<ProtectedRoute><Placeholder name="New Estimate" /></ProtectedRoute>} />
-        <Route path="/estimates/:id" element={<ProtectedRoute><Placeholder name="Estimate Detail" /></ProtectedRoute>} />
-        <Route path="/invoices" element={<ProtectedRoute><Placeholder name="Invoices" /></ProtectedRoute>} />
-        <Route path="/invoices/new" element={<ProtectedRoute><Placeholder name="New Invoice" /></ProtectedRoute>} />
-        <Route path="/invoices/:id" element={<ProtectedRoute><Placeholder name="Invoice Detail" /></ProtectedRoute>} />
-        <Route path="/payments" element={<ProtectedRoute><Placeholder name="Payments" /></ProtectedRoute>} />
-        <Route path="/payments/new" element={<ProtectedRoute><Placeholder name="New Payment" /></ProtectedRoute>} />
-        <Route path="/payments/:id" element={<ProtectedRoute><Placeholder name="Payment Detail" /></ProtectedRoute>} />
+        <Route path="/estimates" element={<ProtectedRoute><EstimateListPage /></ProtectedRoute>} />
+        <Route path="/estimates/new" element={<ProtectedRoute><EstimateNewPage /></ProtectedRoute>} />
+        <Route path="/estimates/:id" element={<ProtectedRoute><EstimateDetailPage /></ProtectedRoute>} />
+        <Route path="/invoices" element={<ProtectedRoute><InvoiceListPage /></ProtectedRoute>} />
+        <Route path="/invoices/new" element={<ProtectedRoute><InvoiceNewPage /></ProtectedRoute>} />
+        <Route path="/invoices/:id" element={<ProtectedRoute><InvoiceDetailPage /></ProtectedRoute>} />
+        <Route path="/payments" element={<ProtectedRoute><PaymentListPage /></ProtectedRoute>} />
+        <Route path="/payments/new" element={<ProtectedRoute><PaymentNewPage /></ProtectedRoute>} />
+        <Route path="/payments/:id" element={<ProtectedRoute><PaymentDetailPage /></ProtectedRoute>} />
         <Route path="/expenses" element={<ProtectedRoute><Placeholder name="Expenses" /></ProtectedRoute>} />
         <Route path="/expenses/new" element={<ProtectedRoute><Placeholder name="New Expense" /></ProtectedRoute>} />
         <Route path="/deliveries" element={<ProtectedRoute><Placeholder name="Deliveries" /></ProtectedRoute>} />
