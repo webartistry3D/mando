@@ -1,0 +1,42 @@
+services:
+  # Mando API — Express + Prisma backend
+  - type: web
+    name: mando-api
+    runtime: node
+    plan: free
+    rootDir: api
+    buildCommand: npm install && npx prisma generate && npx tsc -b
+    startCommand: node dist/index.js
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: mando-db
+          property: connectionString
+      - key: AUTH_SECRET
+        generateValue: true
+      - key: NODE_ENV
+        value: production
+      - key: CORS_ORIGIN
+        sync: false
+
+  # Mando App — Vite PWA frontend
+  - type: web
+    name: mando-app
+    runtime: static
+    rootDir: app
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL
+        sync: false
+
+databases:
+  - name: mando-db
+    plan: free
+    databaseName: mando
+    user: mando

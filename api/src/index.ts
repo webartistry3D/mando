@@ -24,11 +24,22 @@ const PORT = process.env.API_PORT || 3000;
 
 app.use(helmet());
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5173',
+  origin: (origin, cb) => {
+    const allowed = [
+      process.env.CLIENT_URL || 'http://localhost:5173',
+      process.env.CORS_ORIGIN || 'http://localhost:5173',
+    ];
+    if (!origin || allowed.includes(origin)) return cb(null, true);
+    cb(new Error('CORS not allowed'));
+  },
   credentials: true,
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+app.get('/health', (_req, res) => {
+  res.json({ success: true, data: { status: 'ok' }, message: 'Mando API is running' });
+});
 
 app.get('/api/v1/health', (_req, res) => {
   res.json({ success: true, data: { status: 'ok' }, message: 'Mando API is running' });
