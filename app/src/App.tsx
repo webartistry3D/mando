@@ -1,4 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
+import LoginPage from '@/features/auth/LoginPage';
+import RegisterPage from '@/features/auth/RegisterPage';
 
 function Placeholder({ name }: { name: string }) {
   return (
@@ -15,35 +18,38 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Public routes */}
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+
+        {/* Protected routes */}
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="/login" element={<Placeholder name="Login" />} />
-        <Route path="/register" element={<Placeholder name="Register" />} />
-        <Route path="/dashboard" element={<Placeholder name="Dashboard" />} />
-        <Route path="/sales" element={<Placeholder name="Sales" />} />
-        <Route path="/products" element={<Placeholder name="Products" />} />
-        <Route path="/products/new" element={<Placeholder name="New Product" />} />
-        <Route path="/products/:id" element={<Placeholder name="Product Detail" />} />
-        <Route path="/customers" element={<Placeholder name="Customers" />} />
-        <Route path="/customers/new" element={<Placeholder name="New Customer" />} />
-        <Route path="/customers/:id" element={<Placeholder name="Customer Detail" />} />
-        <Route path="/estimates" element={<Placeholder name="Estimates" />} />
-        <Route path="/estimates/new" element={<Placeholder name="New Estimate" />} />
-        <Route path="/estimates/:id" element={<Placeholder name="Estimate Detail" />} />
-        <Route path="/invoices" element={<Placeholder name="Invoices" />} />
-        <Route path="/invoices/new" element={<Placeholder name="New Invoice" />} />
-        <Route path="/invoices/:id" element={<Placeholder name="Invoice Detail" />} />
-        <Route path="/payments" element={<Placeholder name="Payments" />} />
-        <Route path="/payments/new" element={<Placeholder name="New Payment" />} />
-        <Route path="/payments/:id" element={<Placeholder name="Payment Detail" />} />
-        <Route path="/expenses" element={<Placeholder name="Expenses" />} />
-        <Route path="/expenses/new" element={<Placeholder name="New Expense" />} />
-        <Route path="/deliveries" element={<Placeholder name="Deliveries" />} />
-        <Route path="/deliveries/new" element={<Placeholder name="New Delivery" />} />
-        <Route path="/deliveries/:id" element={<Placeholder name="Delivery Detail" />} />
-        <Route path="/reports" element={<Placeholder name="Reports" />} />
-        <Route path="/settings" element={<Placeholder name="Settings" />} />
-        <Route path="/settings/business" element={<Placeholder name="Business Settings" />} />
-        <Route path="/settings/users" element={<Placeholder name="User Management" />} />
+        <Route path="/dashboard" element={<ProtectedRoute><Placeholder name="Dashboard" /></ProtectedRoute>} />
+        <Route path="/sales" element={<ProtectedRoute><Placeholder name="Sales" /></ProtectedRoute>} />
+        <Route path="/products" element={<ProtectedRoute><Placeholder name="Products" /></ProtectedRoute>} />
+        <Route path="/products/new" element={<ProtectedRoute><Placeholder name="New Product" /></ProtectedRoute>} />
+        <Route path="/products/:id" element={<ProtectedRoute><Placeholder name="Product Detail" /></ProtectedRoute>} />
+        <Route path="/customers" element={<ProtectedRoute><Placeholder name="Customers" /></ProtectedRoute>} />
+        <Route path="/customers/new" element={<ProtectedRoute><Placeholder name="New Customer" /></ProtectedRoute>} />
+        <Route path="/customers/:id" element={<ProtectedRoute><Placeholder name="Customer Detail" /></ProtectedRoute>} />
+        <Route path="/estimates" element={<ProtectedRoute><Placeholder name="Estimates" /></ProtectedRoute>} />
+        <Route path="/estimates/new" element={<ProtectedRoute><Placeholder name="New Estimate" /></ProtectedRoute>} />
+        <Route path="/estimates/:id" element={<ProtectedRoute><Placeholder name="Estimate Detail" /></ProtectedRoute>} />
+        <Route path="/invoices" element={<ProtectedRoute><Placeholder name="Invoices" /></ProtectedRoute>} />
+        <Route path="/invoices/new" element={<ProtectedRoute><Placeholder name="New Invoice" /></ProtectedRoute>} />
+        <Route path="/invoices/:id" element={<ProtectedRoute><Placeholder name="Invoice Detail" /></ProtectedRoute>} />
+        <Route path="/payments" element={<ProtectedRoute><Placeholder name="Payments" /></ProtectedRoute>} />
+        <Route path="/payments/new" element={<ProtectedRoute><Placeholder name="New Payment" /></ProtectedRoute>} />
+        <Route path="/payments/:id" element={<ProtectedRoute><Placeholder name="Payment Detail" /></ProtectedRoute>} />
+        <Route path="/expenses" element={<ProtectedRoute><Placeholder name="Expenses" /></ProtectedRoute>} />
+        <Route path="/expenses/new" element={<ProtectedRoute><Placeholder name="New Expense" /></ProtectedRoute>} />
+        <Route path="/deliveries" element={<ProtectedRoute><Placeholder name="Deliveries" /></ProtectedRoute>} />
+        <Route path="/deliveries/new" element={<ProtectedRoute><Placeholder name="New Delivery" /></ProtectedRoute>} />
+        <Route path="/deliveries/:id" element={<ProtectedRoute><Placeholder name="Delivery Detail" /></ProtectedRoute>} />
+        <Route path="/reports" element={<ProtectedRoute><Placeholder name="Reports" /></ProtectedRoute>} />
+        <Route path="/settings" element={<ProtectedRoute><Placeholder name="Settings" /></ProtectedRoute>} />
+        <Route path="/settings/business" element={<ProtectedRoute><Placeholder name="Business Settings" /></ProtectedRoute>} />
+        <Route path="/settings/users" element={<ProtectedRoute><Placeholder name="User Management" /></ProtectedRoute>} />
       </Routes>
     </BrowserRouter>
   );
