@@ -69,7 +69,7 @@ export default function DeliveryDetailPage() {
       <div className="rounded-lg border bg-card p-4 space-y-2 text-sm">
         {delivery.deliveryAddress && <p><span className="font-medium">Address:</span> {delivery.deliveryAddress}</p>}
         {delivery.recipientName && <p><span className="font-medium">Recipient:</span> {delivery.recipientName} {delivery.recipientPhone && `(${delivery.recipientPhone})`}</p>}
-        {delivery.deliveryFee > 0 && <p><span className="font-medium">Delivery Fee:</span> {formatCurrency(delivery.deliveryFee)}</p>}
+        {delivery.deliveryFee > 0 && <p><span className="font-medium">Delivery Fee:</span> <span className="font-mono">{formatCurrency(delivery.deliveryFee)}</span></p>}
         {delivery.assignedPerson && <p><span className="font-medium">Assigned to:</span> {delivery.assignedPerson}</p>}
         {delivery.trackingReference && <p><span className="font-medium">Tracking:</span> {delivery.trackingReference}</p>}
         {delivery.invoice && <p><span className="font-medium">Invoice:</span> <Link to={`/invoices/${delivery.invoice.id}`} className="text-primary underline">{delivery.invoice.number}</Link></p>}

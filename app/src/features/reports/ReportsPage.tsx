@@ -66,7 +66,7 @@ function SalesReport({ params }: { params: URLSearchParams }) {
           {data.byDay.map((d) => (
             <div key={d.date} className="px-4 py-3 flex justify-between text-sm">
               <span>{formatDate(d.date)}</span>
-              <span>Invoiced: {formatCurrency(d.invoiced)} · Collected: {formatCurrency(d.collected)}</span>
+              <span className="font-mono">Invoiced: {formatCurrency(d.invoiced)} · Collected: {formatCurrency(d.collected)}</span>
             </div>
           ))}
         </div>
@@ -94,7 +94,7 @@ function ExpenseReport({ params }: { params: URLSearchParams }) {
           {data.byCategory.map((c) => (
             <div key={c.category} className="px-4 py-3 flex justify-between text-sm">
               <span>{c.category} ({c.count})</span>
-              <span className="font-medium">{formatCurrency(c.total)}</span>
+              <span className="font-medium font-mono">{formatCurrency(c.total)}</span>
             </div>
           ))}
         </div>
@@ -123,7 +123,7 @@ function ProfitReport({ params }: { params: URLSearchParams }) {
           {data.byMonth.map((m) => (
             <div key={m.month} className="px-4 py-3 flex justify-between text-sm">
               <span>{m.month}</span>
-              <span>Rev: {formatCurrency(m.revenue)} · Exp: {formatCurrency(m.expenses)} · Profit: {formatCurrency(m.profit)}</span>
+              <span className="font-mono">Rev: {formatCurrency(m.revenue)} · Exp: {formatCurrency(m.expenses)} · Profit: {formatCurrency(m.profit)}</span>
             </div>
           ))}
         </div>
@@ -147,11 +147,11 @@ function ProductReport({ params }: { params: URLSearchParams }) {
           <div key={p.name} className="px-4 py-3 text-sm">
             <div className="flex justify-between">
               <span className="font-medium">{p.name} <span className="text-xs text-muted-foreground">({p.type})</span></span>
-              <span className="font-medium">{formatCurrency(p.revenue)}</span>
+              <span className="font-medium font-mono">{formatCurrency(p.revenue)}</span>
             </div>
             <div className="flex justify-between text-xs text-muted-foreground mt-1">
               <span>Sold: {p.quantity}</span>
-              <span>Cost: {formatCurrency(p.cost)} · Profit: {formatCurrency(p.profit)}</span>
+              <span className="font-mono">Cost: {formatCurrency(p.cost)} · Profit: {formatCurrency(p.profit)}</span>
             </div>
           </div>
         ))}
@@ -175,7 +175,7 @@ function CustomerReport({ params }: { params: URLSearchParams }) {
         {data.customers.map((c) => (
           <div key={c.name} className="px-4 py-3 flex justify-between text-sm">
             <span>{c.name} ({c.count} payments)</span>
-            <span className="font-medium">{formatCurrency(c.totalPaid)}</span>
+            <span className="font-medium font-mono">{formatCurrency(c.totalPaid)}</span>
           </div>
         ))}
         {data.customers.length === 0 && <p className="px-4 py-8 text-center text-muted-foreground text-sm">No customer data for this period</p>}
@@ -188,7 +188,7 @@ function ReportCard({ label, value, color }: { label: string; value: string | nu
   return (
     <div className="rounded-lg border bg-card p-4">
       <p className="text-sm text-muted-foreground">{label}</p>
-      <p className={`text-lg font-bold ${color || ''}`}>{value}</p>
+      <p className={`text-lg font-bold font-mono ${color || ''}`}>{value}</p>
     </div>
   );
 }

@@ -2,14 +2,13 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import NotificationBell from './NotificationBell';
 import {
-  LayoutDashboard, Briefcase, Users, Package, FileText,
+  LayoutDashboard, Users, Package, FileText,
   Receipt, Banknote, TrendingDown, Truck, BarChart3,
   Settings, LogOut,
 } from 'lucide-react';
 
 const navItems = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/sales', label: 'Sales', icon: Briefcase },
   { to: '/customers', label: 'Customers', icon: Users },
   { to: '/products', label: 'Products', icon: Package },
   { to: '/estimates', label: 'Estimates', icon: FileText },
@@ -22,7 +21,6 @@ const navItems = [
 
 const mobileNavItems = [
   { to: '/dashboard', label: 'Home', icon: LayoutDashboard },
-  { to: '/sales', label: 'Sales', icon: Briefcase },
   { to: '/customers', label: 'Customers', icon: Users },
   { to: '/invoices', label: 'Invoices', icon: Receipt },
   { to: '/reports', label: 'Reports', icon: BarChart3 },

@@ -75,7 +75,7 @@ export default function ProductListPage() {
                   )}
                 </div>
                 <p className="text-sm text-muted-foreground mt-1">
-                  {p.sku && `SKU: ${p.sku} · `}{formatCurrency(p.sellingPrice)}{p.unit ? `/${p.unit}` : ''}
+                  {p.sku && `SKU: ${p.sku} · `}<span className="font-mono">{formatCurrency(p.sellingPrice)}</span>{p.unit ? `/${p.unit}` : ''}
                 </p>
               </div>
               {p.type === 'PRODUCT' && p.inventoryTracking && (

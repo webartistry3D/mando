@@ -140,7 +140,7 @@ export default function InvoiceNewPage() {
                 <input type="number" step="0.01" min="0" value={item.unitPrice} onChange={(e) => updateItem(i, 'unitPrice', Number(e.target.value))} placeholder="Unit Price" className="rounded-md border bg-background px-2 py-1.5 text-sm" />
                 <input type="number" step="0.01" min="0" value={item.discount} onChange={(e) => updateItem(i, 'discount', Number(e.target.value))} placeholder="Discount" className="rounded-md border bg-background px-2 py-1.5 text-sm" />
                 <input type="number" step="0.01" min="0" value={item.tax} onChange={(e) => updateItem(i, 'tax', Number(e.target.value))} placeholder="Tax" className="rounded-md border bg-background px-2 py-1.5 text-sm" />
-                <span className="text-sm font-medium self-center text-right">{formatCurrency(item.quantity * item.unitPrice - item.discount + item.tax)}</span>
+                <span className="text-sm font-medium self-center text-right font-mono">{formatCurrency(item.quantity * item.unitPrice - item.discount + item.tax)}</span>
               </div>
             </div>
           ))}
@@ -158,10 +158,10 @@ export default function InvoiceNewPage() {
             </div>
           </div>
           <div className="border-t pt-3">
-            <div className="flex justify-between text-sm"><span>Subtotal:</span><span>{formatCurrency(subtotal)}</span></div>
-            <div className="flex justify-between text-sm"><span>Discount:</span><span>-{formatCurrency(form.discount)}</span></div>
-            <div className="flex justify-between text-sm"><span>Tax:</span><span>+{formatCurrency(form.tax)}</span></div>
-            <div className="flex justify-between font-bold text-lg mt-2"><span>Total:</span><span>{formatCurrency(total)}</span></div>
+            <div className="flex justify-between text-sm"><span>Subtotal:</span><span className="font-mono">{formatCurrency(subtotal)}</span></div>
+            <div className="flex justify-between text-sm"><span>Discount:</span><span className="font-mono">-{formatCurrency(form.discount)}</span></div>
+            <div className="flex justify-between text-sm"><span>Tax:</span><span className="font-mono">+{formatCurrency(form.tax)}</span></div>
+            <div className="flex justify-between font-bold text-lg mt-2"><span>Total:</span><span className="font-mono">{formatCurrency(total)}</span></div>
           </div>
         </div>
 

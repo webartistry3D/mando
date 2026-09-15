@@ -48,7 +48,7 @@ export default function ExpenseListPage() {
 
       <div className="rounded-lg border bg-card p-4 mb-4">
         <p className="text-sm text-muted-foreground">Total Expenses</p>
-        <p className="text-2xl font-bold">{formatCurrency(total)}</p>
+        <p className="text-2xl font-bold font-mono">{formatCurrency(total)}</p>
       </div>
 
       <div className="space-y-2">
@@ -62,7 +62,7 @@ export default function ExpenseListPage() {
                 </p>
               </div>
               <div className="text-right">
-                <p className="font-bold text-lg">{formatCurrency(e.amount)}</p>
+                <p className="font-bold text-lg font-mono">{formatCurrency(e.amount)}</p>
                 <p className="text-xs text-muted-foreground">{formatDate(e.date)}</p>
               </div>
             </div>

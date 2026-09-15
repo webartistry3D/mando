@@ -158,7 +158,7 @@ export default function DashboardPage() {
                 <Icon className="h-4 w-4" />
               </span>
             </div>
-            <p className="text-xl sm:text-2xl font-bold tracking-tight">{formatCurrency(value)}</p>
+            <p className="text-xl sm:text-2xl font-bold tracking-tight font-mono">{formatCurrency(value)}</p>
             <p className="flex items-center gap-1 text-[11px] text-muted-foreground">
               {trend === 'up' && <ArrowUpRight className="h-3 w-3 text-emerald-500" />}
               {trend === 'down' && <ArrowDownRight className="h-3 w-3 text-rose-500" />}
@@ -217,7 +217,7 @@ export default function DashboardPage() {
               <Wallet className="h-4 w-4 text-amber-500" /> Outstanding
             </span>
             {outstanding && (
-              <span className="text-sm font-bold text-amber-600">{formatCurrency(outstanding.totalDue)}</span>
+              <span className="text-sm font-bold text-amber-600 font-mono">{formatCurrency(outstanding.totalDue)}</span>
             )}
           </div>
           <div className="divide-y">
@@ -230,7 +230,7 @@ export default function DashboardPage() {
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="font-semibold">{formatCurrency(inv.balanceDue)}</p>
+                  <p className="font-semibold font-mono">{formatCurrency(inv.balanceDue)}</p>
                   <Badge status={inv.status} />
                 </div>
                 <Link

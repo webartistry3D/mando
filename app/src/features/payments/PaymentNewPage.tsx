@@ -92,7 +92,7 @@ export default function PaymentNewPage() {
               <option value="">Standalone income</option>
               {unpaidInvoices.map((inv) => (
                 <option key={inv.id} value={inv.id}>
-                  {inv.number} — {formatCurrency(inv.balanceDue)} due
+                  {inv.number} — <span className="font-mono">{formatCurrency(inv.balanceDue)}</span> due
                 </option>
               ))}
             </select>

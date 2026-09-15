@@ -60,7 +60,7 @@ export default function RevenueChart({ days }: Props) {
         {gridLines.map((g) => (
           <g key={g.y}>
             <line x1={PAD_L} x2={W - PAD_R} y1={g.y} y2={g.y} className="stroke-border" strokeDasharray="3 4" strokeWidth={1} />
-            <text x={W - PAD_R} y={g.y - 3} textAnchor="end" className="fill-muted-foreground" fontSize={9}>
+            <text x={W - PAD_R} y={g.y - 3} textAnchor="end" className="fill-muted-foreground font-mono" fontSize={9}>
               {g.label}
             </text>
           </g>
@@ -128,8 +128,8 @@ export default function RevenueChart({ days }: Props) {
       {hover !== null && days[hover] && (
         <div className="pointer-events-none absolute left-1/2 top-0 -translate-x-1/2 rounded-lg border bg-popover px-3 py-2 text-xs shadow-md">
           <p className="font-semibold mb-1">{shortLabel(days[hover].date)}</p>
-          <p className="text-emerald-600">Revenue: {formatCurrency(days[hover].revenue)}</p>
-          <p className="text-rose-500">Expenses: {formatCurrency(days[hover].expenses)}</p>
+          <p className="text-emerald-600 font-mono">Revenue: {formatCurrency(days[hover].revenue)}</p>
+          <p className="text-rose-500 font-mono">Expenses: {formatCurrency(days[hover].expenses)}</p>
         </div>
       )}
     </div>

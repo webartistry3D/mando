@@ -179,15 +179,15 @@ export default function CustomerDetailPage() {
           <div className="grid grid-cols-3 gap-3">
             <div className="rounded-lg border bg-card p-4 text-center">
               <p className="text-sm text-muted-foreground">Invoiced</p>
-              <p className="text-lg font-bold">{formatCurrency(transactions.summary.totalInvoiced)}</p>
+              <p className="text-lg font-bold font-mono">{formatCurrency(transactions.summary.totalInvoiced)}</p>
             </div>
             <div className="rounded-lg border bg-card p-4 text-center">
               <p className="text-sm text-muted-foreground">Paid</p>
-              <p className="text-lg font-bold">{formatCurrency(transactions.summary.totalPaid)}</p>
+              <p className="text-lg font-bold font-mono">{formatCurrency(transactions.summary.totalPaid)}</p>
             </div>
             <div className="rounded-lg border bg-card p-4 text-center">
               <p className="text-sm text-muted-foreground">Outstanding</p>
-              <p className="text-lg font-bold">{formatCurrency(transactions.summary.outstanding)}</p>
+              <p className="text-lg font-bold font-mono">{formatCurrency(transactions.summary.outstanding)}</p>
             </div>
           </div>
 
@@ -199,7 +199,7 @@ export default function CustomerDetailPage() {
                   {transactions.invoices.map((i) => (
                     <div key={i.id} className="px-4 py-3 flex justify-between text-sm">
                       <span>{i.number}</span>
-                      <span className="font-medium">{formatCurrency(i.total)}</span>
+                      <span className="font-medium font-mono">{formatCurrency(i.total)}</span>
                       <span className={i.status === 'PAID' ? 'text-green-600' : i.status === 'OVERDUE' ? 'text-destructive' : 'text-muted-foreground'}>{i.status}</span>
                     </div>
                   ))}
@@ -213,7 +213,7 @@ export default function CustomerDetailPage() {
                 <div className="divide-y">
                   {transactions.payments.map((p) => (
                     <div key={p.id} className="px-4 py-3 flex justify-between text-sm">
-                      <span>{formatCurrency(p.amount)}</span>
+                      <span className="font-mono">{formatCurrency(p.amount)}</span>
                       <span className="text-muted-foreground">{p.paymentMethod}</span>
                       <span className="text-muted-foreground">{formatDate(p.paymentDate)}</span>
                     </div>

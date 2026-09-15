@@ -26,7 +26,7 @@ import ExpenseNewPage from '@/features/expenses/ExpenseNewPage';
 import DeliveryListPage from '@/features/deliveries/DeliveryListPage';
 import DeliveryNewPage from '@/features/deliveries/DeliveryNewPage';
 import DeliveryDetailPage from '@/features/deliveries/DeliveryDetailPage';
-import SalesOverviewPage from '@/features/sales/SalesOverviewPage';
+// import SalesOverviewPage from '@/features/sales/SalesOverviewPage';
 import DashboardPage from '@/features/dashboard/DashboardPage';
 import ReportsPage from '@/features/reports/ReportsPage';
 
@@ -41,7 +41,7 @@ export default function App() {
         {/* Protected routes */}
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={<ProtectedRoute><Layout><DashboardPage /></Layout></ProtectedRoute>} />
-        <Route path="/sales" element={<ProtectedRoute><Layout><SalesOverviewPage /></Layout></ProtectedRoute>} />
+        {/* <Route path="/sales" element={<ProtectedRoute><Layout><SalesOverviewPage /></Layout></ProtectedRoute>} /> */}
         <Route path="/products" element={<ProtectedRoute><Layout><ProductListPage /></Layout></ProtectedRoute>} />
         <Route path="/products/new" element={<ProtectedRoute><Layout><ProductNewPage /></Layout></ProtectedRoute>} />
         <Route path="/products/:id" element={<ProtectedRoute><Layout><ProductDetailPage /></Layout></ProtectedRoute>} />

@@ -56,9 +56,9 @@ export default function InvoiceListPage() {
                 <p className="text-sm text-muted-foreground mt-1">{inv.customer?.name || 'Walk-in'}</p>
               </div>
               <div className="text-right">
-                <p className="font-bold">{formatCurrency(inv.total)}</p>
+                <p className="font-bold font-mono">{formatCurrency(inv.total)}</p>
                 <p className="text-xs text-muted-foreground">
-                  {inv.status === 'PAID' ? 'Paid' : `Due: ${formatCurrency(inv.balanceDue)}`}
+                  {inv.status === 'PAID' ? 'Paid' : <span className="font-mono">{`Due: ${formatCurrency(inv.balanceDue)}`}</span>}
                 </p>
               </div>
             </div>

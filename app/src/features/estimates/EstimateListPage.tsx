@@ -57,7 +57,7 @@ export default function EstimateListPage() {
                 <p className="text-sm text-muted-foreground mt-1">{e.customer?.name || 'Unknown'}</p>
               </div>
               <div className="text-right">
-                <p className="font-bold">{formatCurrency(e.total)}</p>
+                <p className="font-bold font-mono">{formatCurrency(e.total)}</p>
                 <p className="text-xs text-muted-foreground">{formatDate(e.issueDate)}</p>
               </div>
             </div>

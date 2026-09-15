@@ -118,10 +118,10 @@ export default function EstimateDetailPage() {
             <div key={i} className="px-4 py-3 flex justify-between text-sm">
               <div>
                 <p className="font-medium">{item.description}</p>
-                <p className="text-xs text-muted-foreground">{item.quantity} × {formatCurrency(item.unitPrice)}</p>
+                <p className="text-xs text-muted-foreground font-mono">{item.quantity} × {formatCurrency(item.unitPrice)}</p>
               </div>
               <div className="text-right">
-                <p className="font-medium">{formatCurrency(item.lineTotal ?? (item.quantity * item.unitPrice - item.discount + item.tax))}</p>
+                <p className="font-medium font-mono">{formatCurrency(item.lineTotal ?? (item.quantity * item.unitPrice - item.discount + item.tax))}</p>
                 {(item.discount > 0 || item.tax > 0) && (
                   <p className="text-xs text-muted-foreground">
                     {item.discount > 0 && `-${formatCurrency(item.discount)} `}
@@ -133,10 +133,10 @@ export default function EstimateDetailPage() {
           ))}
         </div>
         <div className="border-t px-4 py-3 space-y-1">
-          <div className="flex justify-between text-sm"><span className="text-muted-foreground">Subtotal</span><span>{formatCurrency(estimate.subtotal)}</span></div>
-          {estimate.discount > 0 && <div className="flex justify-between text-sm"><span className="text-muted-foreground">Discount</span><span>-{formatCurrency(estimate.discount)}</span></div>}
-          {estimate.tax > 0 && <div className="flex justify-between text-sm"><span className="text-muted-foreground">Tax</span><span>+{formatCurrency(estimate.tax)}</span></div>}
-          <div className="flex justify-between font-bold text-lg"><span>Total</span><span>{formatCurrency(estimate.total)}</span></div>
+          <div className="flex justify-between text-sm"><span className="text-muted-foreground">Subtotal</span><span className="font-mono">{formatCurrency(estimate.subtotal)}</span></div>
+          {estimate.discount > 0 && <div className="flex justify-between text-sm"><span className="text-muted-foreground">Discount</span><span className="font-mono">-{formatCurrency(estimate.discount)}</span></div>}
+          {estimate.tax > 0 && <div className="flex justify-between text-sm"><span className="text-muted-foreground">Tax</span><span className="font-mono">+{formatCurrency(estimate.tax)}</span></div>}
+          <div className="flex justify-between font-bold text-lg"><span>Total</span><span className="font-mono">{formatCurrency(estimate.total)}</span></div>
         </div>
       </div>
 

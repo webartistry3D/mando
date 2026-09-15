@@ -25,7 +25,7 @@ export default function PaymentListPage() {
             <div className="flex items-center justify-between">
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="font-semibold">{formatCurrency(p.amount)}</span>
+                  <span className="font-semibold font-mono">{formatCurrency(p.amount)}</span>
                   <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium">
                     {p.paymentMethod.replace('_', ' ')}
                   </span>

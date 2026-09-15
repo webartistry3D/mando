@@ -106,15 +106,15 @@ export default function InvoiceDetailPage() {
       <div className="grid grid-cols-3 gap-3">
         <div className="rounded-lg border bg-card p-4 text-center">
           <p className="text-sm text-muted-foreground">Total</p>
-          <p className="text-lg font-bold">{formatCurrency(invoice.total)}</p>
+          <p className="text-lg font-bold font-mono">{formatCurrency(invoice.total)}</p>
         </div>
         <div className="rounded-lg border bg-card p-4 text-center">
           <p className="text-sm text-muted-foreground">Paid</p>
-          <p className="text-lg font-bold text-green-600">{formatCurrency(invoice.amountPaid)}</p>
+          <p className="text-lg font-bold text-green-600 font-mono">{formatCurrency(invoice.amountPaid)}</p>
         </div>
         <div className="rounded-lg border bg-card p-4 text-center">
           <p className="text-sm text-muted-foreground">Balance Due</p>
-          <p className={`text-lg font-bold ${invoice.balanceDue > 0 ? 'text-destructive' : 'text-green-600'}`}>
+          <p className={`text-lg font-bold font-mono ${invoice.balanceDue > 0 ? 'text-destructive' : 'text-green-600'}`}>
             {formatCurrency(invoice.balanceDue)}
           </p>
         </div>
@@ -128,17 +128,17 @@ export default function InvoiceDetailPage() {
             <div key={i} className="px-4 py-3 flex justify-between text-sm">
               <div>
                 <p className="font-medium">{item.description}</p>
-                <p className="text-xs text-muted-foreground">{item.quantity} × {formatCurrency(item.unitPrice)}</p>
+                <p className="text-xs text-muted-foreground font-mono">{item.quantity} × {formatCurrency(item.unitPrice)}</p>
               </div>
-              <p className="font-medium">{formatCurrency(item.lineTotal ?? (item.quantity * item.unitPrice - item.discount + item.tax))}</p>
+              <p className="font-medium font-mono">{formatCurrency(item.lineTotal ?? (item.quantity * item.unitPrice - item.discount + item.tax))}</p>
             </div>
           ))}
         </div>
         <div className="border-t px-4 py-3 space-y-1">
-          <div className="flex justify-between text-sm"><span className="text-muted-foreground">Subtotal</span><span>{formatCurrency(invoice.subtotal)}</span></div>
-          {invoice.discount > 0 && <div className="flex justify-between text-sm"><span className="text-muted-foreground">Discount</span><span>-{formatCurrency(invoice.discount)}</span></div>}
-          {invoice.tax > 0 && <div className="flex justify-between text-sm"><span className="text-muted-foreground">Tax</span><span>+{formatCurrency(invoice.tax)}</span></div>}
-          <div className="flex justify-between font-bold text-lg"><span>Total</span><span>{formatCurrency(invoice.total)}</span></div>
+          <div className="flex justify-between text-sm"><span className="text-muted-foreground">Subtotal</span><span className="font-mono">{formatCurrency(invoice.subtotal)}</span></div>
+          {invoice.discount > 0 && <div className="flex justify-between text-sm"><span className="text-muted-foreground">Discount</span><span className="font-mono">-{formatCurrency(invoice.discount)}</span></div>}
+          {invoice.tax > 0 && <div className="flex justify-between text-sm"><span className="text-muted-foreground">Tax</span><span className="font-mono">+{formatCurrency(invoice.tax)}</span></div>}
+          <div className="flex justify-between font-bold text-lg"><span>Total</span><span className="font-mono">{formatCurrency(invoice.total)}</span></div>
         </div>
       </div>
 
@@ -150,7 +150,7 @@ export default function InvoiceDetailPage() {
             {invoice.payments.map((p) => (
               <div key={p.id} className="px-4 py-3 flex justify-between text-sm">
                 <div>
-                  <p className="font-medium">{formatCurrency(p.amount)}</p>
+                  <p className="font-medium font-mono">{formatCurrency(p.amount)}</p>
                   <p className="text-xs text-muted-foreground">{p.paymentMethod.replace('_', ' ')}</p>
                 </div>
                 <p className="text-xs text-muted-foreground">{formatDate(p.paymentDate)}</p>

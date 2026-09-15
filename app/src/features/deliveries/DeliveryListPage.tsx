@@ -54,7 +54,7 @@ export default function DeliveryListPage() {
                 </p>
               </div>
               <div className="text-right">
-                <p className="font-medium">{formatCurrency(d.deliveryFee)}</p>
+                <p className="font-medium font-mono">{formatCurrency(d.deliveryFee)}</p>
                 <p className="text-xs text-muted-foreground">{formatDate(d.createdAt)}</p>
               </div>
             </div>
