@@ -2,6 +2,9 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import LoginPage from '@/features/auth/LoginPage';
 import RegisterPage from '@/features/auth/RegisterPage';
+import SettingsPage from '@/features/settings/SettingsPage';
+import BusinessSettingsPage from '@/features/settings/BusinessSettingsPage';
+import UserManagementPage from '@/features/settings/UserManagementPage';
 
 function Placeholder({ name }: { name: string }) {
   return (
@@ -47,9 +50,9 @@ export default function App() {
         <Route path="/deliveries/new" element={<ProtectedRoute><Placeholder name="New Delivery" /></ProtectedRoute>} />
         <Route path="/deliveries/:id" element={<ProtectedRoute><Placeholder name="Delivery Detail" /></ProtectedRoute>} />
         <Route path="/reports" element={<ProtectedRoute><Placeholder name="Reports" /></ProtectedRoute>} />
-        <Route path="/settings" element={<ProtectedRoute><Placeholder name="Settings" /></ProtectedRoute>} />
-        <Route path="/settings/business" element={<ProtectedRoute><Placeholder name="Business Settings" /></ProtectedRoute>} />
-        <Route path="/settings/users" element={<ProtectedRoute><Placeholder name="User Management" /></ProtectedRoute>} />
+        <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+        <Route path="/settings/business" element={<ProtectedRoute><BusinessSettingsPage /></ProtectedRoute>} />
+        <Route path="/settings/users" element={<ProtectedRoute><UserManagementPage /></ProtectedRoute>} />
       </Routes>
     </BrowserRouter>
   );
