@@ -20,6 +20,11 @@ import InvoiceDetailPage from '@/features/invoices/InvoiceDetailPage';
 import PaymentListPage from '@/features/payments/PaymentListPage';
 import PaymentNewPage from '@/features/payments/PaymentNewPage';
 import PaymentDetailPage from '@/features/payments/PaymentDetailPage';
+import ExpenseListPage from '@/features/expenses/ExpenseListPage';
+import ExpenseNewPage from '@/features/expenses/ExpenseNewPage';
+import DeliveryListPage from '@/features/deliveries/DeliveryListPage';
+import DeliveryNewPage from '@/features/deliveries/DeliveryNewPage';
+import DeliveryDetailPage from '@/features/deliveries/DeliveryDetailPage';
 
 function Placeholder({ name }: { name: string }) {
   return (
@@ -59,11 +64,11 @@ export default function App() {
         <Route path="/payments" element={<ProtectedRoute><PaymentListPage /></ProtectedRoute>} />
         <Route path="/payments/new" element={<ProtectedRoute><PaymentNewPage /></ProtectedRoute>} />
         <Route path="/payments/:id" element={<ProtectedRoute><PaymentDetailPage /></ProtectedRoute>} />
-        <Route path="/expenses" element={<ProtectedRoute><Placeholder name="Expenses" /></ProtectedRoute>} />
-        <Route path="/expenses/new" element={<ProtectedRoute><Placeholder name="New Expense" /></ProtectedRoute>} />
-        <Route path="/deliveries" element={<ProtectedRoute><Placeholder name="Deliveries" /></ProtectedRoute>} />
-        <Route path="/deliveries/new" element={<ProtectedRoute><Placeholder name="New Delivery" /></ProtectedRoute>} />
-        <Route path="/deliveries/:id" element={<ProtectedRoute><Placeholder name="Delivery Detail" /></ProtectedRoute>} />
+        <Route path="/expenses" element={<ProtectedRoute><ExpenseListPage /></ProtectedRoute>} />
+        <Route path="/expenses/new" element={<ProtectedRoute><ExpenseNewPage /></ProtectedRoute>} />
+        <Route path="/deliveries" element={<ProtectedRoute><DeliveryListPage /></ProtectedRoute>} />
+        <Route path="/deliveries/new" element={<ProtectedRoute><DeliveryNewPage /></ProtectedRoute>} />
+        <Route path="/deliveries/:id" element={<ProtectedRoute><DeliveryDetailPage /></ProtectedRoute>} />
         <Route path="/reports" element={<ProtectedRoute><Placeholder name="Reports" /></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
         <Route path="/settings/business" element={<ProtectedRoute><BusinessSettingsPage /></ProtectedRoute>} />
