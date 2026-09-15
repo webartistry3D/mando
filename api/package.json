@@ -1,10 +1,9 @@
-{
-  "name": "@mando/api",
+﻿{"name": "@mando/api",
   "version": "1.0.0",
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
+    "dev": "tsx watch --tsconfig tsconfig.json src/index.ts",
     "build": "tsc && tsc-alias",
     "start": "node dist/index.js",
     "db:migrate": "prisma migrate dev --name init",
@@ -32,9 +31,9 @@
     "@types/jsonwebtoken": "^9.0.7",
     "@types/node": "^22.0.0",
     "prisma": "^6.0.0",
+    "tsc-alias": "^1.8.10",
     "tsx": "^4.19.0",
     "typescript": "^5.6.0",
-    "tsc-alias": "^1.8.10",
     "vitest": "^2.1.0"
   }
 }

@@ -2,6 +2,8 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import authRoutes from './routes/auth.js';
+import { prisma } from './lib/prisma.js';
 
 const app = express();
 const PORT = process.env.API_PORT || 3000;
@@ -16,6 +18,28 @@ app.use(express.urlencoded({ extended: true }));
 
 app.get('/api/v1/health', (_req, res) => {
   res.json({ success: true, data: { status: 'ok' }, message: 'Mando API is running' });
+});
+
+// Routes
+app.use('/api/v1/auth', authRoutes);
+
+// Global error handler (Zod errors, etc.)
+app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  if (err instanceof Error && err.name === 'ZodError') {
+    return res.status(400).json({
+      success: false,
+      error: {
+        code: 'VALIDATION_ERROR',
+        message: 'Invalid request',
+        details: (err as any).errors,
+      },
+    });
+  }
+  console.error('Unhandled error:', err);
+  return res.status(500).json({
+    success: false,
+    error: { code: 'INTERNAL_ERROR', message: 'Something went wrong' },
+  });
 });
 
 app.listen(PORT, () => {
