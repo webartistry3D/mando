@@ -5,6 +5,9 @@ import RegisterPage from '@/features/auth/RegisterPage';
 import SettingsPage from '@/features/settings/SettingsPage';
 import BusinessSettingsPage from '@/features/settings/BusinessSettingsPage';
 import UserManagementPage from '@/features/settings/UserManagementPage';
+import CustomerListPage from '@/features/customers/CustomerListPage';
+import CustomerNewPage from '@/features/customers/CustomerNewPage';
+import CustomerDetailPage from '@/features/customers/CustomerDetailPage';
 
 function Placeholder({ name }: { name: string }) {
   return (
@@ -32,9 +35,9 @@ export default function App() {
         <Route path="/products" element={<ProtectedRoute><Placeholder name="Products" /></ProtectedRoute>} />
         <Route path="/products/new" element={<ProtectedRoute><Placeholder name="New Product" /></ProtectedRoute>} />
         <Route path="/products/:id" element={<ProtectedRoute><Placeholder name="Product Detail" /></ProtectedRoute>} />
-        <Route path="/customers" element={<ProtectedRoute><Placeholder name="Customers" /></ProtectedRoute>} />
-        <Route path="/customers/new" element={<ProtectedRoute><Placeholder name="New Customer" /></ProtectedRoute>} />
-        <Route path="/customers/:id" element={<ProtectedRoute><Placeholder name="Customer Detail" /></ProtectedRoute>} />
+        <Route path="/customers" element={<ProtectedRoute><CustomerListPage /></ProtectedRoute>} />
+        <Route path="/customers/new" element={<ProtectedRoute><CustomerNewPage /></ProtectedRoute>} />
+        <Route path="/customers/:id" element={<ProtectedRoute><CustomerDetailPage /></ProtectedRoute>} />
         <Route path="/estimates" element={<ProtectedRoute><Placeholder name="Estimates" /></ProtectedRoute>} />
         <Route path="/estimates/new" element={<ProtectedRoute><Placeholder name="New Estimate" /></ProtectedRoute>} />
         <Route path="/estimates/:id" element={<ProtectedRoute><Placeholder name="Estimate Detail" /></ProtectedRoute>} />
