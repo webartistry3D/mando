@@ -1,5 +1,5 @@
-import { useState, type FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect, type FormEvent } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { formatCurrency } from '@/lib/utils';
@@ -30,8 +30,11 @@ export default function PaymentNewPage() {
 
   const unpaidInvoices = [...invoices, ...partialInvoices, ...overdueInvoices];
 
+  const [searchParams] = useSearchParams();
+  const preselectInvoice = searchParams.get('invoice') || '';
+
   const [form, setForm] = useState({
-    invoiceId: '',
+    invoiceId: preselectInvoice,
     customerId: '',
     amount: 0,
     paymentMethod: 'BANK_TRANSFER' as const,
@@ -40,6 +43,15 @@ export default function PaymentNewPage() {
     description: '',
     notes: '',
   });
+
+  // Pre-fill amount with the invoice balance when preselected or picked
+  useEffect(() => {
+    const inv = unpaidInvoices.find((i) => i.id === form.invoiceId);
+    if (inv && form.amount <= 0) {
+      setForm((prev) => ({ ...prev, amount: Number(inv.balanceDue) }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.invoiceId, unpaidInvoices.length]);
 
   const create = useMutation({
     mutationFn: (data: typeof form) => api.post('/payments', {
