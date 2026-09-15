@@ -29,6 +29,40 @@ export interface MeResponse {
   memberships: Membership[];
 }
 
+export interface Product {
+  id: string;
+  businessId: string;
+  name: string;
+  type: 'PRODUCT' | 'SERVICE';
+  sku?: string | null;
+  description?: string | null;
+  sellingPrice: number;
+  costPrice: number;
+  unit?: string | null;
+  taxEnabled: boolean;
+  inventoryTracking: boolean;
+  openingStock: number;
+  lowStockThreshold: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  stock?: number;
+}
+
+export interface InventoryTransaction {
+  id: string;
+  businessId: string;
+  productId: string;
+  type: 'STOCK_IN' | 'STOCK_OUT' | 'ADJUSTMENT';
+  quantity: number;
+  referenceType?: string | null;
+  referenceId?: string | null;
+  reason?: string | null;
+  createdById?: string | null;
+  createdAt: string;
+  product?: { id: string; name: string; sku?: string | null };
+}
+
 export interface Customer {
   id: string;
   businessId: string;
