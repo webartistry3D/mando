@@ -81,8 +81,11 @@ app.use((err: unknown, _req: express.Request, res: express.Response, _next: expr
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`Mando API running on http://localhost:${PORT}`);
-});
+// Only start the server when not imported as a module (e.g., in tests)
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => {
+    console.log(`Mando API running on http://localhost:${PORT}`);
+  });
+}
 
 export default app;
