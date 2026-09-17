@@ -3,6 +3,7 @@ export interface User {
   name: string;
   email: string;
   phone?: string | null;
+  role?: 'OWNER' | 'MANAGER' | 'STAFF';
 }
 
 export interface Business {
@@ -117,6 +118,7 @@ export interface Estimate {
   subtotal: number;
   discount: number;
   tax: number;
+  deliveryFee: number;
   total: number;
   notes?: string | null;
   terms?: string | null;
@@ -150,6 +152,8 @@ export interface Invoice {
   subtotal: number;
   discount: number;
   tax: number;
+  taxRemitted?: number;
+  taxRemittedAt?: string | null;
   total: number;
   amountPaid: number;
   balanceDue: number;

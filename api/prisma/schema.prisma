@@ -16,7 +16,8 @@ model User {
   name         String
   email        String   @unique
   phone        String?
-  passwordHash String
+  passwordHash String   @default("")
+  googleId     String?  @unique
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -186,6 +187,7 @@ model Estimate {
   subtotal    Decimal  @default(0) @db.Decimal(12, 2)
   discount    Decimal  @default(0) @db.Decimal(12, 2)
   tax         Decimal  @default(0) @db.Decimal(12, 2)
+  deliveryFee Decimal  @default(0) @db.Decimal(12, 2)
   total       Decimal  @default(0) @db.Decimal(12, 2)
   notes       String?
   terms       String?
@@ -243,6 +245,8 @@ model Invoice {
   subtotal           Decimal  @default(0) @db.Decimal(12, 2)
   discount           Decimal  @default(0) @db.Decimal(12, 2)
   tax                Decimal  @default(0) @db.Decimal(12, 2)
+  taxRemitted         Decimal  @default(0) @db.Decimal(12, 2)
+  taxRemittedAt       DateTime?
   total              Decimal  @default(0) @db.Decimal(12, 2)
   amountPaid         Decimal  @default(0) @db.Decimal(12, 2)
   balanceDue         Decimal  @default(0) @db.Decimal(12, 2)

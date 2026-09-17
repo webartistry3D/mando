@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "description": "Mando - Nigerian SME Business Operations PWA",
-  "workspaces": ["app", "api"],
+  "workspaces": [
+    "app",
+    "api"
+  ],
   "scripts": {
     "dev": "npm run dev --workspaces --if-present",
     "dev:api": "npm run dev --workspace @mando/api",
@@ -19,5 +22,8 @@
   },
   "engines": {
     "node": ">=20"
+  },
+  "dependencies": {
+    "framer-motion": "^13.3.0"
   }
 }

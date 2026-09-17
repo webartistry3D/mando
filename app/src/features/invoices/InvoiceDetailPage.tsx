@@ -1,8 +1,11 @@
-import { useParams } from 'react-router-dom';
+import { useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { AnimatePresence, motion } from 'framer-motion';
 import { api } from '@/lib/api';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { generateInvoicePDF } from '@/lib/pdf';
+import { ArrowLeft } from 'lucide-react';
 import type { Invoice, Business } from '@/types';
 
 const statusColors: Record<string, string> = {
@@ -16,7 +19,10 @@ const statusColors: Record<string, string> = {
 
 export default function InvoiceDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
+
+  const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
 
   const { data: invoice } = useQuery({
     queryKey: ['invoice', id],
@@ -42,7 +48,10 @@ export default function InvoiceDetailPage() {
   const recordPayment = useMutation({
     mutationFn: (data: { amount: number; paymentMethod: string }) =>
       api.post('/payments', { ...data, invoiceId: id }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['invoice', id] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['invoice', id] });
+      setShowPaymentSuccess(true);
+    },
   });
 
   if (!invoice) return <div className="p-8 text-center text-muted-foreground">Loading...</div>;
@@ -51,51 +60,71 @@ export default function InvoiceDetailPage() {
   const canPay = ['ISSUED', 'PARTIALLY_PAID', 'OVERDUE'].includes(invoice.status);
   const canCancel = ['ISSUED', 'PARTIALLY_PAID', 'OVERDUE'].includes(invoice.status);
 
+  const grossSubtotal = invoice.items?.reduce((s, i) => s + Number(i.quantity) * Number(i.unitPrice), 0) || 0;
+  const itemDiscount = invoice.items?.reduce((s, i) => s + Number(i.discount), 0) || 0;
+  const itemTax = invoice.items?.reduce((s, i) => s + Number(i.tax), 0) || 0;
+  const deliveryFee = invoice.deliveries?.reduce((s, d) => s + Number(d.deliveryFee), 0) || 0;
+  const displaySubtotal = Number(invoice.subtotal) || grossSubtotal;
+  const displayDiscount = Number(invoice.discount) > 0 ? Number(invoice.discount) : itemDiscount;
+  const displayTax = Number(invoice.tax) > 0 ? Number(invoice.tax) : itemTax;
+  const displayTotal = displaySubtotal - displayDiscount + displayTax + deliveryFee;
+
   return (
-    <div className="mx-auto max-w-4xl p-4 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold">{invoice.number}</h1>
-            <span className={`rounded-full px-3 py-1 text-xs font-medium ${statusColors[invoice.status]}`}>
-              {invoice.status.replace('_', ' ')}
-            </span>
-          </div>
-          <p className="text-sm text-muted-foreground mt-1">
-            {invoice.customer?.name || 'Walk-in'} · {formatDate(invoice.issueDate)}
-            {invoice.dueDate && ` · Due ${formatDate(invoice.dueDate)}`}
-          </p>
-        </div>
-        <div className="flex gap-2">
+    <div className="mx-auto max-w-5xl p-4 space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3">
           <button
-            onClick={() => business && invoice && generateInvoicePDF(invoice, business)}
-            className="rounded-md border px-3 py-2 text-sm font-medium"
+            onClick={() => navigate('/invoices')}
+            className="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+            aria-label="Back to invoices"
           >
-            Download PDF
+            <ArrowLeft className="h-5 w-5" />
           </button>
-          <a
-            href={`https://wa.me/${invoice.customer?.phone?.replace(/\D/g, '') || ''}?text=${encodeURIComponent(`Invoice ${invoice.number}\nTotal: ₦${Number(invoice.total).toLocaleString()}\nBalance: ₦${Number(invoice.balanceDue).toLocaleString()}${invoice.dueDate ? `\nDue: ${formatDate(invoice.dueDate)}` : ''}\n${invoice.paymentInstructions || ''}`)}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="rounded-md border border-green-300 bg-green-50 px-3 py-2 text-sm font-medium text-green-700"
-          >
-            WhatsApp
-          </a>
+          <div>
+            <div className="flex flex-wrap items-center gap-3">
+              <h1 className="text-2xl font-bold">{invoice.number}</h1>
+              <span className={`rounded-full px-3 py-1 text-xs font-medium ${statusColors[invoice.status]}`}>
+                {invoice.status.replace('_', ' ')}
+              </span>
+            </div>
+            <p className="text-sm text-muted-foreground mt-1">
+              {invoice.customer?.name || 'Walk-in'} · {formatDate(invoice.issueDate)}
+              {invoice.dueDate && ` · Due ${formatDate(invoice.dueDate)}`}
+            </p>
+          </div>
+        </div>
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+          <div className="grid grid-cols-2 gap-2 w-full sm:w-auto">
+            <button
+              onClick={() => business && invoice && generateInvoicePDF(invoice, business)}
+              className="rounded-md border px-3 py-2 text-sm font-medium w-full"
+            >
+              Download PDF
+            </button>
+            <a
+              href={`https://wa.me/${invoice.customer?.phone?.replace(/\D/g, '') || ''}?text=${encodeURIComponent(`Invoice ${invoice.number}\nTotal: ₦${displayTotal.toLocaleString()}\nBalance: ₦${Math.max(0, displayTotal - Number(invoice.amountPaid)).toLocaleString()}${invoice.dueDate ? `\nDue: ${formatDate(invoice.dueDate)}` : ''}\n${invoice.paymentInstructions || ''}`)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-md border border-green-300 bg-green-50 px-3 py-2 text-sm font-medium text-green-700 w-full text-center"
+            >
+              WhatsApp
+            </a>
+          </div>
           {isDraft && (
-            <button onClick={() => issue.mutate()} className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white">
+            <button onClick={() => issue.mutate()} className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white w-full sm:w-auto">
               Issue Invoice
             </button>
           )}
           {canPay && (
             <button
-              onClick={() => recordPayment.mutate({ amount: invoice.balanceDue, paymentMethod: 'BANK_TRANSFER' })}
-              className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white"
+              onClick={() => recordPayment.mutate({ amount: Number(invoice.balanceDue), paymentMethod: 'BANK_TRANSFER' })}
+              className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white w-full sm:w-auto"
             >
               Record Payment
             </button>
           )}
           {canCancel && (
-            <button onClick={() => updateStatus.mutate('CANCELLED')} className="rounded-md border px-4 py-2 text-sm font-medium text-destructive">
+            <button onClick={() => updateStatus.mutate('CANCELLED')} className="rounded-md border px-4 py-2 text-sm font-medium text-destructive w-full sm:w-auto">
               Cancel
             </button>
           )}
@@ -103,16 +132,16 @@ export default function InvoiceDetailPage() {
       </div>
 
       {/* Payment summary */}
-      <div className="grid grid-cols-3 gap-3">
-        <div className="rounded-lg border bg-card p-4 text-center">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="rounded-lg border bg-card p-4 text-center shadow-3d-sm">
           <p className="text-sm text-muted-foreground">Total</p>
-          <p className="text-lg font-bold font-mono">{formatCurrency(invoice.total)}</p>
+          <p className="text-lg font-bold font-mono">{formatCurrency(displayTotal)}</p>
         </div>
-        <div className="rounded-lg border bg-card p-4 text-center">
+        <div className="rounded-lg border bg-card p-4 text-center shadow-3d-sm">
           <p className="text-sm text-muted-foreground">Paid</p>
           <p className="text-lg font-bold text-green-600 font-mono">{formatCurrency(invoice.amountPaid)}</p>
         </div>
-        <div className="rounded-lg border bg-card p-4 text-center">
+        <div className="rounded-lg border bg-card p-4 text-center shadow-3d-sm">
           <p className="text-sm text-muted-foreground">Balance Due</p>
           <p className={`text-lg font-bold font-mono ${invoice.balanceDue > 0 ? 'text-destructive' : 'text-green-600'}`}>
             {formatCurrency(invoice.balanceDue)}
@@ -121,39 +150,40 @@ export default function InvoiceDetailPage() {
       </div>
 
       {/* Items */}
-      <div className="rounded-lg border bg-card overflow-hidden">
+      <div className="rounded-lg border bg-card overflow-hidden shadow-3d">
         <div className="px-4 py-3 border-b bg-muted/50 font-semibold text-sm">Items</div>
         <div className="divide-y">
           {invoice.items?.map((item, i) => (
-            <div key={i} className="px-4 py-3 flex justify-between text-sm">
+            <div key={i} className="px-4 py-3 flex flex-col sm:flex-row sm:justify-between gap-1 text-sm">
               <div>
                 <p className="font-medium">{item.description}</p>
                 <p className="text-xs text-muted-foreground font-mono">{item.quantity} × {formatCurrency(item.unitPrice)}</p>
               </div>
-              <p className="font-medium font-mono">{formatCurrency(item.lineTotal ?? (item.quantity * item.unitPrice - item.discount + item.tax))}</p>
+              <p className="font-medium font-mono sm:text-right">{formatCurrency(item.lineTotal ?? (item.quantity * item.unitPrice - item.discount + item.tax))}</p>
             </div>
           ))}
         </div>
         <div className="border-t px-4 py-3 space-y-1">
-          <div className="flex justify-between text-sm"><span className="text-muted-foreground">Subtotal</span><span className="font-mono">{formatCurrency(invoice.subtotal)}</span></div>
-          {invoice.discount > 0 && <div className="flex justify-between text-sm"><span className="text-muted-foreground">Discount</span><span className="font-mono">-{formatCurrency(invoice.discount)}</span></div>}
-          {invoice.tax > 0 && <div className="flex justify-between text-sm"><span className="text-muted-foreground">Tax</span><span className="font-mono">+{formatCurrency(invoice.tax)}</span></div>}
-          <div className="flex justify-between font-bold text-lg"><span>Total</span><span className="font-mono">{formatCurrency(invoice.total)}</span></div>
+          <div className="flex justify-between text-sm"><span className="text-muted-foreground">Subtotal</span><span className="font-mono">{formatCurrency(displaySubtotal)}</span></div>
+          {displayDiscount > 0 && <div className="flex justify-between text-sm"><span className="text-muted-foreground">Discount</span><span className="font-mono">-{formatCurrency(displayDiscount)}</span></div>}
+          {displayTax > 0 && <div className="flex justify-between text-sm"><span className="text-muted-foreground">Tax</span><span className="font-mono">+{formatCurrency(displayTax)}</span></div>}
+          {deliveryFee > 0 && <div className="flex justify-between text-sm"><span className="text-muted-foreground">Delivery Fee</span><span className="font-mono">+{formatCurrency(deliveryFee)}</span></div>}
+          <div className="flex justify-between font-bold text-lg"><span>Total</span><span className="font-mono">{formatCurrency(displayTotal)}</span></div>
         </div>
       </div>
 
       {/* Payments */}
       {invoice.payments && invoice.payments.length > 0 && (
-        <div className="rounded-lg border bg-card overflow-hidden">
+        <div className="rounded-lg border bg-card overflow-hidden shadow-3d">
           <div className="px-4 py-3 border-b bg-muted/50 font-semibold text-sm">Payments</div>
           <div className="divide-y">
             {invoice.payments.map((p) => (
-              <div key={p.id} className="px-4 py-3 flex justify-between text-sm">
+              <div key={p.id} className="px-4 py-3 flex flex-col sm:flex-row sm:justify-between gap-1 text-sm">
                 <div>
                   <p className="font-medium font-mono">{formatCurrency(p.amount)}</p>
                   <p className="text-xs text-muted-foreground">{p.paymentMethod.replace('_', ' ')}</p>
                 </div>
-                <p className="text-xs text-muted-foreground">{formatDate(p.paymentDate)}</p>
+                <p className="text-xs text-muted-foreground sm:text-right">{formatDate(p.paymentDate)}</p>
               </div>
             ))}
           </div>
@@ -161,17 +191,53 @@ export default function InvoiceDetailPage() {
       )}
 
       {invoice.paymentInstructions && (
-        <div className="rounded-lg border bg-card p-4">
+        <div className="rounded-lg border bg-card p-4 shadow-3d-sm">
           <h2 className="font-semibold text-sm mb-2">Payment Instructions</h2>
           <p className="text-sm text-muted-foreground">{invoice.paymentInstructions}</p>
         </div>
       )}
       {invoice.notes && (
-        <div className="rounded-lg border bg-card p-4">
+        <div className="rounded-lg border bg-card p-4 shadow-3d-sm">
           <h2 className="font-semibold text-sm mb-2">Notes</h2>
           <p className="text-sm text-muted-foreground">{invoice.notes}</p>
         </div>
       )}
+
+      <AnimatePresence>
+        {showPaymentSuccess && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm"
+              onClick={() => setShowPaymentSuccess(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-6 pointer-events-none"
+            >
+              <div
+                className="w-full max-w-xs rounded-xl border bg-card p-5 shadow-3d pointer-events-auto"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <h3 className="text-lg font-semibold text-center">Payment Recorded</h3>
+                <p className="text-sm text-muted-foreground text-center mt-1 mb-4">
+                  The payment has been recorded successfully.
+                </p>
+                <button
+                  onClick={() => setShowPaymentSuccess(false)}
+                  className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
+                >
+                  OK
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

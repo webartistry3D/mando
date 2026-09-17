@@ -68,8 +68,8 @@ export default function RevenueChart({ days }: Props) {
 
         {days.map((d, i) => {
           const cx = PAD_L + groupW * i + groupW / 2;
-          const rH = Math.max(2, innerH - (d.revenue / max) * innerH);
-          const eH = Math.max(2, innerH - (d.expenses / max) * innerH);
+          const rH = Math.max(2, (d.revenue / max) * innerH);
+          const eH = Math.max(2, (d.expenses / max) * innerH);
           return (
             <g
               key={d.date}
@@ -107,7 +107,7 @@ export default function RevenueChart({ days }: Props) {
                 width={barW}
                 height={eH}
                 rx={2}
-                className="fill-rose-400"
+                className="fill-rose-500"
               />
               {(days.length <= 12 || i % Math.ceil(days.length / 10) === 0) && (
                 <text

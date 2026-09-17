@@ -1,7 +1,8 @@
-import { useParams, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { formatCurrency, formatDate } from '@/lib/utils';
+import { ArrowLeft } from 'lucide-react';
 import type { Delivery } from '@/types';
 
 const statusColors: Record<string, string> = {
@@ -24,6 +25,7 @@ const nextActions: Record<string, { label: string; status: string; color: string
 
 export default function DeliveryDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   const { data: delivery } = useQuery({
@@ -42,16 +44,25 @@ export default function DeliveryDetailPage() {
   return (
     <div className="mx-auto max-w-2xl p-4 space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold">{delivery.number}</h1>
-            <span className={`rounded-full px-3 py-1 text-xs font-medium ${statusColors[delivery.status]}`}>
-              {delivery.status.replace('_', ' ')}
-            </span>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate('/deliveries')}
+            className="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+            aria-label="Back to deliveries"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+          <div>
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-bold">{delivery.number}</h1>
+              <span className={`rounded-full px-3 py-1 text-xs font-medium ${statusColors[delivery.status]}`}>
+                {delivery.status.replace('_', ' ')}
+              </span>
+            </div>
+            <p className="text-sm text-muted-foreground mt-1">
+              {delivery.customer?.name || 'Walk-in'} · {formatDate(delivery.createdAt)}
+            </p>
           </div>
-          <p className="text-sm text-muted-foreground mt-1">
-            {delivery.customer?.name || 'Walk-in'} · {formatDate(delivery.createdAt)}
-          </p>
         </div>
         <div className="flex gap-2">
           {nextActions[delivery.status]?.map((a) => (
@@ -66,7 +77,7 @@ export default function DeliveryDetailPage() {
         </div>
       </div>
 
-      <div className="rounded-lg border bg-card p-4 space-y-2 text-sm">
+      <div className="rounded-lg border bg-card p-4 space-y-2 text-sm shadow-3d-sm">
         {delivery.deliveryAddress && <p><span className="font-medium">Address:</span> {delivery.deliveryAddress}</p>}
         {delivery.recipientName && <p><span className="font-medium">Recipient:</span> {delivery.recipientName} {delivery.recipientPhone && `(${delivery.recipientPhone})`}</p>}
         {delivery.deliveryFee > 0 && <p><span className="font-medium">Delivery Fee:</span> <span className="font-mono">{formatCurrency(delivery.deliveryFee)}</span></p>}
@@ -78,7 +89,7 @@ export default function DeliveryDetailPage() {
       </div>
 
       {delivery.items && delivery.items.length > 0 && (
-        <div className="rounded-lg border bg-card overflow-hidden">
+        <div className="rounded-lg border bg-card overflow-hidden shadow-3d">
           <div className="px-4 py-3 border-b bg-muted/50 font-semibold text-sm">Items</div>
           <div className="divide-y">
             {delivery.items.map((item, i) => (

@@ -7,6 +7,14 @@ const router = Router();
 
 router.use(authRequired, loadBusinessContext);
 
+/** Format a Date as YYYY-MM-DD in local time (avoids UTC shift from toISOString). */
+function localDateKey(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
 // GET /api/v1/dashboard/summary
 router.get('/summary', asyncHandler(async (req, res) => {
   const businessId = req.user!.businessId!;
@@ -51,6 +59,30 @@ router.get('/summary', asyncHandler(async (req, res) => {
     overdueCount,
     pendingDeliveries: pendingDeliveries._count,
   });
+}));
+
+// GET /api/v1/dashboard/expenses-by-category
+router.get('/expenses-by-category', asyncHandler(async (req, res) => {
+  const businessId = req.user!.businessId!;
+  const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+
+  const rows = await prisma.expense.groupBy({
+    by: ['categoryId'],
+    where: { businessId, date: { gte: monthStart } },
+    _sum: { amount: true },
+  });
+
+  const categories = await prisma.expenseCategory.findMany({
+    where: { id: { in: rows.map((r) => r.categoryId) } },
+    select: { id: true, name: true },
+  });
+  const nameMap = new Map(categories.map((c) => [c.id, c.name]));
+
+  const breakdown = rows
+    .map((r) => ({ name: nameMap.get(r.categoryId) || 'Uncategorized', amount: Number(r._sum.amount || 0) }))
+    .sort((a, b) => b.amount - a.amount);
+
+  return success(res, breakdown);
 }));
 
 // GET /api/v1/dashboard/activity
@@ -137,18 +169,18 @@ router.get('/chart', asyncHandler(async (req, res) => {
   const end = new Date(to);
   end.setHours(0, 0, 0, 0);
   while (cursor <= end) {
-    days.push({ date: cursor.toISOString().slice(0, 10), revenue: 0, expenses: 0 });
+    days.push({ date: localDateKey(cursor), revenue: 0, expenses: 0 });
     cursor.setDate(cursor.getDate() + 1);
   }
   const index = new Map(days.map((d, i) => [d.date, i]));
 
   for (const p of payments) {
-    const key = new Date(p.paymentDate).toISOString().slice(0, 10);
+    const key = localDateKey(new Date(p.paymentDate));
     const i = index.get(key);
     if (i !== undefined) days[i].revenue += Number(p.amount);
   }
   for (const e of expenses) {
-    const key = new Date(e.date).toISOString().slice(0, 10);
+    const key = localDateKey(new Date(e.date));
     const i = index.get(key);
     if (i !== undefined) days[i].expenses += Number(e.amount);
   }

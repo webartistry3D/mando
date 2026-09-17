@@ -52,7 +52,7 @@ export default function AssistantPanel() {
   };
 
   return (
-    <div className="rounded-xl border bg-card overflow-hidden">
+    <div className="rounded-xl border bg-card overflow-hidden shadow-3d">
       <div className="border-b bg-gradient-to-r from-violet-500/10 via-transparent to-transparent px-4 py-3 flex items-center gap-2">
         <Sparkles className="h-4 w-4 text-violet-500" />
         <span className="font-semibold text-sm">Business Assistant</span>

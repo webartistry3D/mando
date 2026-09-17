@@ -28,7 +28,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const data = await api.post<AuthData>('/auth/login', { email, password });
     localStorage.setItem('mando_token', data.token);
     setToken(data.token);
-    setUser(data.user);
+    const me = await api.get<MeResponse>('/auth/me');
+    const membership = me.memberships[0];
+    setUser({ ...me.user, role: membership?.role });
   }, []);
 
   const register = useCallback(
@@ -42,7 +44,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const res = await api.post<AuthData>('/auth/register', data);
       localStorage.setItem('mando_token', res.token);
       setToken(res.token);
-      setUser(res.user);
+      const me = await api.get<MeResponse>('/auth/me');
+      const membership = me.memberships[0];
+      setUser({ ...me.user, role: membership?.role });
     },
     [],
   );
@@ -57,7 +61,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!token) return;
     try {
       const data = await api.get<MeResponse>('/auth/me');
-      setUser(data.user);
+      const membership = data.memberships[0];
+      setUser({ ...data.user, role: membership?.role });
     } catch {
       localStorage.removeItem('mando_token');
       setToken(null);

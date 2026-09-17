@@ -21,10 +21,47 @@ async function nextInvoiceNumber(businessId: string): Promise<string> {
   return `${prefix}-${String(seq).padStart(3, '0')}`;
 }
 
-function calcTotals(items: Array<{ quantity: number; unitPrice: number; discount: number; tax: number }>, docDiscount: number, docTax: number) {
-  const subtotal = items.reduce((sum, i) => sum + i.quantity * i.unitPrice - i.discount + i.tax, 0);
-  const total = subtotal - docDiscount + docTax;
-  return { subtotal: Number(subtotal.toFixed(2)), total: Number(total.toFixed(2)) };
+function calcTotals(items: Array<{ quantity: number; unitPrice: number; discount: number; tax: number }>, docDiscount: number, docTax: number, deliveryFee = 0) {
+  const subtotal = items.reduce((sum, i) => sum + i.quantity * i.unitPrice, 0);
+  const lineDiscount = items.reduce((sum, i) => sum + i.discount, 0);
+  const lineTax = items.reduce((sum, i) => sum + i.tax, 0);
+  const discount = lineDiscount + docDiscount;
+  const tax = lineTax + docTax;
+  const total = subtotal - discount + tax + deliveryFee;
+  return {
+    subtotal: Number(subtotal.toFixed(2)),
+    discount: Number(discount.toFixed(2)),
+    tax: Number(tax.toFixed(2)),
+    total: Number(total.toFixed(2)),
+  };
+}
+
+// Recalculate an invoice's stored totals from its line items + linked delivery fees.
+// Used by the deliveries route to keep invoice totals in sync when delivery fees change.
+export async function recalcInvoiceTotals(invoiceId: string) {
+  const invoice = await prisma.invoice.findFirst({
+    where: { id: invoiceId },
+    include: { items: true, payments: true, deliveries: { select: { deliveryFee: true } } },
+  });
+  if (!invoice) return;
+  const deliveryFee = invoice.deliveries.reduce((s, d) => s + Number(d.deliveryFee), 0);
+  const { subtotal, discount, tax, total } = calcTotals(
+    invoice.items.map((i) => ({
+      quantity: i.quantity,
+      unitPrice: Number(i.unitPrice),
+      discount: Number(i.discount),
+      tax: Number(i.tax),
+    })),
+    Number(invoice.discount) - invoice.items.reduce((s, i) => s + Number(i.discount), 0),
+    Number(invoice.tax) - invoice.items.reduce((s, i) => s + Number(i.tax), 0),
+    deliveryFee,
+  );
+  const amountPaid = Number(invoice.payments.reduce((s, p) => s + Number(p.amount), 0).toFixed(2));
+  const balanceDue = Number(Math.max(0, total - amountPaid).toFixed(2));
+  await prisma.invoice.update({
+    where: { id: invoiceId },
+    data: { subtotal, discount, tax, total, amountPaid, balanceDue },
+  });
 }
 
 // GET /api/v1/invoices
@@ -73,7 +110,7 @@ router.post('/', asyncHandler(async (req, res) => {
   }
 
   const number = input.number || await nextInvoiceNumber(businessId);
-  const { subtotal, total } = calcTotals(input.items, input.discount || 0, input.tax || 0);
+  const { subtotal, discount, tax, total } = calcTotals(input.items, input.discount || 0, input.tax || 0);
 
   const invoice = await prisma.invoice.create({
     data: {
@@ -84,8 +121,8 @@ router.post('/', asyncHandler(async (req, res) => {
       issueDate: input.issueDate ? new Date(input.issueDate) : new Date(),
       dueDate: input.dueDate ? new Date(input.dueDate) : undefined,
       subtotal,
-      discount: input.discount || 0,
-      tax: input.tax || 0,
+      discount,
+      tax,
       total,
       amountPaid: 0,
       balanceDue: total,
@@ -157,15 +194,28 @@ router.patch('/:id', asyncHandler(async (req, res) => {
   }
 
   const items = input.items || invoice.items;
-  const { subtotal, total } = calcTotals(
+  const oldLineDiscount = invoice.items.reduce((s, i) => s + Number(i.discount), 0);
+  const oldLineTax = invoice.items.reduce((s, i) => s + Number(i.tax), 0);
+  const docDiscount = input.discount !== undefined ? input.discount : Number(invoice.discount) - oldLineDiscount;
+  const docTax = input.tax !== undefined ? input.tax : Number(invoice.tax) - oldLineTax;
+
+  // Include linked delivery fees in the invoice total
+  const linkedDeliveries = await prisma.delivery.findMany({
+    where: { invoiceId: invoice.id },
+    select: { deliveryFee: true },
+  });
+  const deliveryFee = linkedDeliveries.reduce((s, d) => s + Number(d.deliveryFee), 0);
+
+  const { subtotal, discount, tax, total } = calcTotals(
     items.map((i) => ({
       quantity: i.quantity,
       unitPrice: typeof i.unitPrice === 'object' ? Number(i.unitPrice) : i.unitPrice,
       discount: typeof i.discount === 'object' ? Number(i.discount) : i.discount,
       tax: typeof i.tax === 'object' ? Number(i.tax) : i.tax,
     })),
-    input.discount !== undefined ? input.discount : Number(invoice.discount),
-    input.tax !== undefined ? input.tax : Number(invoice.tax),
+    docDiscount,
+    docTax,
+    deliveryFee,
   );
 
   const updated = await prisma.$transaction(async (tx) => {
@@ -191,9 +241,9 @@ router.patch('/:id', asyncHandler(async (req, res) => {
         ...(input.customerId !== undefined ? { customerId: input.customerId || null } : {}),
         ...(input.issueDate ? { issueDate: new Date(input.issueDate) } : {}),
         ...(input.dueDate ? { dueDate: new Date(input.dueDate) } : {}),
-        ...(input.discount !== undefined ? { discount: input.discount } : {}),
-        ...(input.tax !== undefined ? { tax: input.tax } : {}),
         subtotal,
+        discount,
+        tax,
         total,
         ...(input.notes !== undefined ? { notes: input.notes } : {}),
         ...(input.paymentInstructions !== undefined ? { paymentInstructions: input.paymentInstructions } : {}),

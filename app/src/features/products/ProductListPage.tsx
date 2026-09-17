@@ -1,13 +1,18 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { formatCurrency } from '@/lib/utils';
 import type { Product } from '@/types';
+import NewProductModal from './NewProductModal';
+import Pagination, { usePagination } from '@/components/Pagination';
+import { Plus } from 'lucide-react';
 
 export default function ProductListPage() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState<'' | 'PRODUCT' | 'SERVICE'>('');
+  const [modalOpen, setModalOpen] = useState(false);
 
   const params = new URLSearchParams();
   if (search) params.set('search', search);
@@ -18,16 +23,18 @@ export default function ProductListPage() {
     queryFn: () => api.get<Product[]>(`/products?${params.toString()}`),
   });
 
+  const { page, totalPages, pagedItems, setPage } = usePagination(products);
+
   return (
-    <div className="mx-auto max-w-4xl p-4">
+    <div className="mx-auto max-w-5xl p-4">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Products & Services</h1>
-        <Link
-          to="/products/new"
-          className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
+        <button
+          onClick={() => setModalOpen(true)}
+          className="flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
         >
-          + New Product
-        </Link>
+          <Plus className="h-4 w-4" /> New
+        </button>
       </div>
 
       <div className="flex gap-3 mb-4">
@@ -49,50 +56,61 @@ export default function ProductListPage() {
         </select>
       </div>
 
-      <div className="space-y-2">
-        {products.map((p) => (
-          <Link
-            key={p.id}
-            to={`/products/${p.id}`}
-            className="block rounded-lg border bg-card p-4 hover:bg-accent/50 transition-colors"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <h3 className="font-semibold">{p.name}</h3>
-                  <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${p.type === 'PRODUCT' ? 'bg-blue-50 text-blue-700' : 'bg-purple-50 text-purple-700'}`}>
+      <div className="rounded-xl border bg-card overflow-x-auto shadow-3d">
+        <table className="w-full min-w-[500px] text-sm">
+          <thead>
+            <tr className="border-b text-left text-xs text-muted-foreground">
+              <th className="px-4 py-2.5 font-medium w-12 whitespace-nowrap">#</th>
+              <th className="px-4 py-2.5 font-medium whitespace-nowrap">Name</th>
+              <th className="px-4 py-2.5 font-medium whitespace-nowrap">Type</th>
+              <th className="px-4 py-2.5 font-medium whitespace-nowrap">SKU</th>
+              <th className="px-4 py-2.5 font-medium text-right whitespace-nowrap">Price</th>
+              <th className="px-4 py-2.5 font-medium text-right whitespace-nowrap">Stock</th>
+              <th className="px-4 py-2.5 font-medium text-right whitespace-nowrap">Status</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y">
+            {pagedItems.map((p, i) => (
+              <tr
+                key={p.id}
+                onClick={() => navigate(`/products/${p.id}`)}
+                className="cursor-pointer hover:bg-accent/30 transition-colors"
+              >
+                <td className="px-4 py-3 text-muted-foreground font-mono whitespace-nowrap">{(page - 1) * 10 + i + 1}</td>
+                <td className="px-4 py-3 font-medium whitespace-nowrap">{p.name}</td>
+                <td className="px-4 py-3 whitespace-nowrap">
+                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${p.type === 'PRODUCT' ? 'bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300' : 'bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300'}`}>
                     {p.type === 'PRODUCT' ? 'Product' : 'Service'}
                   </span>
-                  {!p.isActive && (
-                    <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-                      Inactive
+                </td>
+                <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{p.sku || '—'}</td>
+                <td className="px-4 py-3 text-right font-mono whitespace-nowrap">{formatCurrency(p.sellingPrice)}{p.unit ? `/${p.unit}` : ''}</td>
+                <td className="px-4 py-3 text-right whitespace-nowrap">
+                  {p.type === 'PRODUCT' && p.inventoryTracking ? (
+                    <span className={p.stock !== undefined && p.stock <= p.lowStockThreshold ? 'text-rose-600 font-medium font-mono' : 'font-mono'}>
+                      {p.stock ?? 0}
                     </span>
-                  )}
-                  {p.inventoryTracking && p.stock !== undefined && p.stock <= p.lowStockThreshold && (
-                    <span className="rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700">
-                      Low stock ({p.stock})
-                    </span>
-                  )}
-                </div>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {p.sku && `SKU: ${p.sku} · `}<span className="font-mono">{formatCurrency(p.sellingPrice)}</span>{p.unit ? `/${p.unit}` : ''}
-                </p>
-              </div>
-              {p.type === 'PRODUCT' && p.inventoryTracking && (
-                <div className="text-right text-sm">
-                  <span className="font-medium">{p.stock ?? 0}</span>
-                  <span className="text-muted-foreground"> in stock</span>
-                </div>
-              )}
-            </div>
-          </Link>
-        ))}
+                  ) : '—'}
+                </td>
+                <td className="px-4 py-3 text-right whitespace-nowrap">
+                  {p.isActive
+                    ? <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">Active</span>
+                    : <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">Inactive</span>
+                  }
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
         {products.length === 0 && (
           <p className="py-12 text-center text-muted-foreground">
             {search ? 'No products match your search' : 'No products yet. Create your first one.'}
           </p>
         )}
+        <Pagination page={page} totalPages={totalPages} totalItems={products.length} setPage={setPage} />
       </div>
+
+      <NewProductModal open={modalOpen} onClose={() => setModalOpen(false)} />
     </div>
   );
 }

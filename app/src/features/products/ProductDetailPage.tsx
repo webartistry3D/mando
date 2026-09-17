@@ -1,8 +1,11 @@
 import { useState, useEffect, type FormEvent } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { formatCurrency, formatDate } from '@/lib/utils';
+import { ArrowLeft } from 'lucide-react';
+import MoneyInput from '@/components/MoneyInput';
+import NumberInput from '@/components/NumberInput';
 import type { Product, InventoryTransaction } from '@/types';
 
 interface ProductDetail extends Product {
@@ -11,6 +14,7 @@ interface ProductDetail extends Product {
 
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
   const [error, setError] = useState('');
@@ -90,15 +94,24 @@ export default function ProductDetailPage() {
   if (!product) return <div className="p-8 text-center text-muted-foreground">Loading...</div>;
 
   return (
-    <div className="mx-auto max-w-4xl p-4 space-y-6">
+    <div className="mx-auto max-w-5xl p-4 space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">{product.name}</h1>
-          <p className="text-sm text-muted-foreground">
-            {product.type === 'PRODUCT' ? 'Product' : 'Service'} {product.sku ? `· SKU: ${product.sku}` : ''}
-          </p>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate('/products')}
+            className="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+            aria-label="Back to products"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+          <div>
+            <h1 className="text-2xl font-bold">{product.name}</h1>
+            <p className="text-sm text-muted-foreground">
+              {product.type === 'PRODUCT' ? 'Product' : 'Service'} {product.sku ? `· SKU: ${product.sku}` : ''}
+            </p>
+          </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
           {!isEditing && (
             <>
               <button onClick={() => setIsEditing(true)} className="rounded-md border px-4 py-2 text-sm font-medium">
@@ -123,7 +136,7 @@ export default function ProductDetailPage() {
       )}
 
       {isEditing ? (
-        <form onSubmit={handleSubmit} className="rounded-lg border bg-card p-4 space-y-4">
+        <form onSubmit={handleSubmit} className="rounded-lg border bg-card p-4 space-y-4 shadow-3d">
           <h2 className="font-semibold">Edit {product.type === 'PRODUCT' ? 'Product' : 'Service'}</h2>
           <div className="space-y-3">
             <div>
@@ -154,11 +167,11 @@ export default function ProductDetailPage() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-sm font-medium">Selling Price (₦)</label>
-                <input type="number" step="0.01" min="0" value={form.sellingPrice} onChange={(e) => update('sellingPrice', Number(e.target.value))} required className="w-full rounded-md border bg-background px-3 py-2 text-sm mt-1" />
+                <MoneyInput value={form.sellingPrice} onChange={(v) => update('sellingPrice', v)} required placeholder="0.00" />
               </div>
               <div>
                 <label className="text-sm font-medium">Cost Price (₦)</label>
-                <input type="number" step="0.01" min="0" value={form.costPrice} onChange={(e) => update('costPrice', Number(e.target.value))} className="w-full rounded-md border bg-background px-3 py-2 text-sm mt-1" />
+                <MoneyInput value={form.costPrice} onChange={(v) => update('costPrice', v)} placeholder="0.00" />
               </div>
             </div>
             <label className="flex items-center gap-2 text-sm font-medium">
@@ -175,11 +188,11 @@ export default function ProductDetailPage() {
                   <div className="grid grid-cols-2 gap-3 pl-6">
                     <div>
                       <label className="text-sm font-medium">Opening Stock</label>
-                      <input type="number" min="0" value={form.openingStock} onChange={(e) => update('openingStock', Number(e.target.value))} className="w-full rounded-md border bg-background px-3 py-2 text-sm mt-1" />
+                      <NumberInput value={form.openingStock} onChange={(v) => update('openingStock', v)} placeholder="0" />
                     </div>
                     <div>
                       <label className="text-sm font-medium">Low Stock Threshold</label>
-                      <input type="number" min="0" value={form.lowStockThreshold} onChange={(e) => update('lowStockThreshold', Number(e.target.value))} className="w-full rounded-md border bg-background px-3 py-2 text-sm mt-1" />
+                      <NumberInput value={form.lowStockThreshold} onChange={(v) => update('lowStockThreshold', v)} placeholder="0" />
                     </div>
                   </div>
                 )}
@@ -197,21 +210,21 @@ export default function ProductDetailPage() {
         </form>
       ) : (
         <div className="space-y-4">
-          <div className="rounded-lg border bg-card p-4 space-y-2">
-            <p className="text-sm"><span className="font-medium">Selling Price:</span> {formatCurrency(product.sellingPrice)}</p>
-            <p className="text-sm"><span className="font-medium">Cost Price:</span> {formatCurrency(product.costPrice)}</p>
+          <div className="rounded-lg border bg-card p-4 space-y-2 shadow-3d-sm">
+            <p className="text-sm"><span className="font-medium">Selling Price:</span> <span className="font-mono">{formatCurrency(product.sellingPrice)}</span></p>
+            <p className="text-sm"><span className="font-medium">Cost Price:</span> <span className="font-mono">{formatCurrency(product.costPrice)}</span></p>
             {product.unit && <p className="text-sm"><span className="font-medium">Unit:</span> {product.unit}</p>}
             <p className="text-sm"><span className="font-medium">Tax:</span> {product.taxEnabled ? 'Enabled' : 'Disabled'}</p>
             {product.description && <p className="text-sm"><span className="font-medium">Description:</span> {product.description}</p>}
             {product.inventoryTracking && (
-              <p className="text-sm"><span className="font-medium">Stock:</span> {product.stock} units</p>
+              <p className="text-sm"><span className="font-medium">Stock:</span> <span className="font-mono">{product.stock}</span> units</p>
             )}
           </div>
         </div>
       )}
 
       {product.inventoryTracking && inventory && (
-        <div className="rounded-lg border bg-card overflow-hidden">
+        <div className="rounded-lg border bg-card overflow-hidden shadow-3d">
           <div className="px-4 py-3 border-b bg-muted/50 font-semibold text-sm">
             Inventory History
           </div>
@@ -225,7 +238,7 @@ export default function ProductDetailPage() {
                   {t.reason && <span className="text-muted-foreground ml-2">— {t.reason}</span>}
                 </div>
                 <div className="text-right">
-                  <span className="font-medium">{t.type === 'STOCK_OUT' ? '-' : '+'}{t.quantity}</span>
+                  <span className="font-medium font-mono">{t.type === 'STOCK_OUT' ? '-' : '+'}{t.quantity}</span>
                   <span className="text-muted-foreground ml-2 text-xs">{formatDate(t.createdAt)}</span>
                 </div>
               </div>

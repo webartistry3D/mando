@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { prisma } from '../lib/prisma.js';
+import { hashPassword } from '../lib/auth.js';
 import { authRequired, loadBusinessContext, requireRole } from '../middleware/auth.js';
 import { success, error, notFound, asyncHandler } from '../lib/response.js';
 import {
@@ -83,17 +84,18 @@ router.get('/members', asyncHandler(async (req, res) => {
 router.post('/members', requireRole('OWNER'), asyncHandler(async (req, res) => {
   const input = addMemberSchema.parse(req.body);
 
-  const user = await prisma.user.findUnique({ where: { email: input.email } });
-  if (!user) {
-    return error(res, 'USER_NOT_FOUND', 'No user found with that email. They must register first.', 404);
+  const existingUser = await prisma.user.findUnique({ where: { email: input.email } });
+  if (existingUser) {
+    return error(res, 'CONFLICT', 'Email already registered', 409);
   }
 
-  const existing = await prisma.businessMember.findUnique({
-    where: { businessId_userId: { businessId: req.user!.businessId!, userId: user.id } },
+  const user = await prisma.user.create({
+    data: {
+      name: input.name,
+      email: input.email,
+      passwordHash: hashPassword(input.password),
+    },
   });
-  if (existing) {
-    return error(res, 'ALREADY_MEMBER', 'User is already a member of this business', 409);
-  }
 
   const member = await prisma.businessMember.create({
     data: {
@@ -103,7 +105,7 @@ router.post('/members', requireRole('OWNER'), asyncHandler(async (req, res) => {
     },
     include: { user: { select: { id: true, name: true, email: true, phone: true } } },
   });
-  return success(res, member, 'Member added', 201);
+  return success(res, member, 'Member created', 201);
 }));
 
 // GET /api/v1/business/members/:id
@@ -148,34 +150,6 @@ router.delete('/members/:id', requireRole('OWNER'), asyncHandler(async (req, res
 
   await prisma.businessMember.delete({ where: { id: req.params.id } });
   return success(res, null, 'Member removed');
-}));
-
-// POST /api/v1/business/invite
-router.post('/invite', requireRole('OWNER'), asyncHandler(async (req, res) => {
-  const input = addMemberSchema.parse(req.body);
-  // For MVP, invite = add existing user by email.
-  // Future: send email invitation to non-registered users.
-  const user = await prisma.user.findUnique({ where: { email: input.email } });
-  if (!user) {
-    return error(res, 'USER_NOT_FOUND', 'No user found with that email. They must register first.', 404);
-  }
-
-  const existing = await prisma.businessMember.findUnique({
-    where: { businessId_userId: { businessId: req.user!.businessId!, userId: user.id } },
-  });
-  if (existing) {
-    return error(res, 'ALREADY_MEMBER', 'User is already a member of this business', 409);
-  }
-
-  const member = await prisma.businessMember.create({
-    data: {
-      businessId: req.user!.businessId!,
-      userId: user.id,
-      role: input.role,
-    },
-    include: { user: { select: { id: true, name: true, email: true, phone: true } } },
-  });
-  return success(res, member, 'Invitation sent / member added', 201);
 }));
 
 export default router;

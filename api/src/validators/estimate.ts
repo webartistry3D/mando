@@ -17,6 +17,7 @@ export const createEstimateSchema = z.object({
   items: z.array(estimateItemSchema).min(1, 'At least one item is required'),
   discount: z.number().min(0).default(0),
   tax: z.number().min(0).default(0),
+  deliveryFee: z.number().min(0).default(0),
   notes: z.string().optional(),
   terms: z.string().optional(),
 });

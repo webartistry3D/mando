@@ -19,10 +19,19 @@ async function nextNumber(businessId: string, prefix: string): Promise<string> {
   return `${prefix}-${String(seq).padStart(3, '0')}`;
 }
 
-function calcTotals(items: Array<{ quantity: number; unitPrice: number; discount: number; tax: number }>, docDiscount: number, docTax: number) {
-  const subtotal = items.reduce((sum, i) => sum + i.quantity * i.unitPrice - i.discount + i.tax, 0);
-  const total = subtotal - docDiscount + docTax;
-  return { subtotal: Number(subtotal.toFixed(2)), total: Number(total.toFixed(2)) };
+function calcTotals(items: Array<{ quantity: number; unitPrice: number; discount: number; tax: number }>, docDiscount: number, docTax: number, deliveryFee = 0) {
+  const subtotal = items.reduce((sum, i) => sum + i.quantity * i.unitPrice, 0);
+  const lineDiscount = items.reduce((sum, i) => sum + i.discount, 0);
+  const lineTax = items.reduce((sum, i) => sum + i.tax, 0);
+  const discount = lineDiscount + docDiscount;
+  const tax = lineTax + docTax;
+  const total = subtotal - discount + tax + deliveryFee;
+  return {
+    subtotal: Number(subtotal.toFixed(2)),
+    discount: Number(discount.toFixed(2)),
+    tax: Number(tax.toFixed(2)),
+    total: Number(total.toFixed(2)),
+  };
 }
 
 // GET /api/v1/estimates
@@ -65,7 +74,7 @@ router.post('/', asyncHandler(async (req, res) => {
   const settings = await prisma.businessSettings.findUnique({ where: { businessId } });
   const number = input.number || await nextNumber(businessId, settings?.estimatePrefix || 'EST');
 
-  const { subtotal, total } = calcTotals(input.items, input.discount || 0, input.tax || 0);
+  const { subtotal, discount, tax, total } = calcTotals(input.items, input.discount || 0, input.tax || 0, input.deliveryFee || 0);
 
   const estimate = await prisma.estimate.create({
     data: {
@@ -76,8 +85,9 @@ router.post('/', asyncHandler(async (req, res) => {
       issueDate: input.issueDate ? new Date(input.issueDate) : new Date(),
       expiryDate: input.expiryDate ? new Date(input.expiryDate) : undefined,
       subtotal,
-      discount: input.discount || 0,
-      tax: input.tax || 0,
+      discount,
+      tax,
+      deliveryFee: input.deliveryFee || 0,
       total,
       notes: input.notes,
       terms: input.terms,
@@ -131,15 +141,21 @@ router.patch('/:id', asyncHandler(async (req, res) => {
   }
 
   const items = input.items || estimate.items;
-  const { subtotal, total } = calcTotals(
+  const oldLineDiscount = estimate.items.reduce((s, i) => s + Number(i.discount), 0);
+  const oldLineTax = estimate.items.reduce((s, i) => s + Number(i.tax), 0);
+  const docDiscount = input.discount !== undefined ? input.discount : Number(estimate.discount) - oldLineDiscount;
+  const docTax = input.tax !== undefined ? input.tax : Number(estimate.tax) - oldLineTax;
+
+  const { subtotal, discount, tax, total } = calcTotals(
     items.map((i) => ({
       quantity: i.quantity,
       unitPrice: typeof i.unitPrice === 'object' ? Number(i.unitPrice) : i.unitPrice,
       discount: typeof i.discount === 'object' ? Number(i.discount) : i.discount,
       tax: typeof i.tax === 'object' ? Number(i.tax) : i.tax,
     })),
-    input.discount !== undefined ? input.discount : Number(estimate.discount),
-    input.tax !== undefined ? input.tax : Number(estimate.tax),
+    docDiscount,
+    docTax,
+    input.deliveryFee !== undefined ? input.deliveryFee : Number(estimate.deliveryFee),
   );
 
   const updated = await prisma.$transaction(async (tx) => {
@@ -166,9 +182,10 @@ router.patch('/:id', asyncHandler(async (req, res) => {
         ...(input.customerId ? { customerId: input.customerId } : {}),
         ...(input.issueDate ? { issueDate: new Date(input.issueDate) } : {}),
         ...(input.expiryDate ? { expiryDate: new Date(input.expiryDate) } : {}),
-        ...(input.discount !== undefined ? { discount: input.discount } : {}),
-        ...(input.tax !== undefined ? { tax: input.tax } : {}),
         subtotal,
+        discount,
+        tax,
+        deliveryFee: input.deliveryFee !== undefined ? input.deliveryFee : Number(estimate.deliveryFee),
         total,
         ...(input.notes !== undefined ? { notes: input.notes } : {}),
         ...(input.terms !== undefined ? { terms: input.terms } : {}),
@@ -218,6 +235,18 @@ router.post('/:id/convert', asyncHandler(async (req, res) => {
   const seq = lastInvoice ? parseInt(lastInvoice.number.replace(/\D/g, ''), 10) + 1 : 1;
   const invoiceNumber = `${invoicePrefix}-${String(seq).padStart(3, '0')}`;
 
+  const { subtotal, discount, tax, total } = calcTotals(
+    estimate.items.map((item) => ({
+      quantity: Number(item.quantity),
+      unitPrice: Number(item.unitPrice),
+      discount: Number(item.discount),
+      tax: Number(item.tax),
+    })),
+    0,
+    0,
+    Number(estimate.deliveryFee),
+  );
+
   const invoice = await prisma.invoice.create({
     data: {
       businessId,
@@ -226,11 +255,11 @@ router.post('/:id/convert', asyncHandler(async (req, res) => {
       number: invoiceNumber,
       status: 'ISSUED',
       issueDate: new Date(),
-      subtotal: estimate.subtotal,
-      discount: estimate.discount,
-      tax: estimate.tax,
-      total: estimate.total,
-      balanceDue: estimate.total,
+      subtotal,
+      discount,
+      tax,
+      total,
+      balanceDue: total,
       notes: estimate.notes,
       createdById: req.user!.userId,
       items: {

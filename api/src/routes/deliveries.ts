@@ -3,6 +3,7 @@ import { prisma } from '../lib/prisma.js';
 import { authRequired, loadBusinessContext } from '../middleware/auth.js';
 import { success, error, notFound, asyncHandler } from '../lib/response.js';
 import { createDeliverySchema, updateDeliverySchema } from '../validators/delivery.js';
+import { recalcInvoiceTotals } from './invoices.js';
 import type { DeliveryStatus } from '@prisma/client';
 
 const router = Router();
@@ -105,6 +106,7 @@ router.post('/', asyncHandler(async (req, res) => {
     },
   });
 
+  if (delivery.invoiceId) await recalcInvoiceTotals(delivery.invoiceId);
   return success(res, delivery, 'Delivery created', 201);
 }));
 
@@ -158,6 +160,7 @@ router.patch('/:id', asyncHandler(async (req, res) => {
       items: true,
     },
   });
+  if (updated.invoiceId) await recalcInvoiceTotals(updated.invoiceId);
   return success(res, updated, 'Delivery updated');
 }));
 
@@ -171,7 +174,9 @@ router.delete('/:id', asyncHandler(async (req, res) => {
     return error(res, 'FORBIDDEN', 'Only pending deliveries can be deleted', 400);
   }
 
+  const invoiceId = delivery.invoiceId;
   await prisma.delivery.delete({ where: { id: delivery.id } });
+  if (invoiceId) await recalcInvoiceTotals(invoiceId);
   return success(res, null, 'Delivery deleted');
 }));
 

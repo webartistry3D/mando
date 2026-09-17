@@ -10,7 +10,14 @@ router.use(authRequired, loadBusinessContext);
 function parseDateRange(req: { query: Record<string, unknown> }) {
   const { dateFrom, dateTo } = req.query;
   const from = dateFrom ? new Date(dateFrom as string) : new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-  const to = dateTo ? new Date(dateTo as string) : new Date();
+  // Parse dateTo as end of day to include records created later that day
+  let to: Date;
+  if (dateTo) {
+    to = new Date(dateTo as string);
+    to.setUTCHours(23, 59, 59, 999);
+  } else {
+    to = new Date();
+  }
   return { from, to };
 }
 
@@ -210,6 +217,128 @@ router.get('/customers', asyncHandler(async (req, res) => {
   const customers = Object.values(byCustomer).sort((a, b) => b.totalPaid - a.totalPaid);
 
   return success(res, { period: { from, to }, customers });
+}));
+
+// GET /api/v1/reports/deliveries
+router.get('/deliveries', asyncHandler(async (req, res) => {
+  const { from, to } = parseDateRange(req);
+  const businessId = req.user!.businessId!;
+
+  const deliveries = await prisma.delivery.findMany({
+    where: { businessId, createdAt: { gte: from, lte: to } },
+    include: {
+      customer: { select: { id: true, name: true } },
+      invoice: { select: { id: true, number: true } },
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+
+  const totalFees = deliveries.reduce((s, d) => s + Number(d.deliveryFee), 0);
+  const byStatus = deliveries.reduce((acc, d) => {
+    const status = d.status;
+    if (!acc[status]) acc[status] = { status, count: 0, fees: 0 };
+    acc[status].count += 1;
+    acc[status].fees += Number(d.deliveryFee);
+    return acc;
+  }, {} as Record<string, { status: string; count: number; fees: number }>);
+
+  return success(res, {
+    period: { from, to },
+    summary: {
+      deliveryCount: deliveries.length,
+      totalFees: Number(totalFees.toFixed(2)),
+    },
+    byStatus: Object.values(byStatus).sort((a, b) => b.count - a.count),
+    deliveries: deliveries.map((d) => ({
+      id: d.id,
+      number: d.number,
+      status: d.status,
+      deliveryFee: Number(d.deliveryFee),
+      customerName: d.customer?.name || null,
+      invoiceNumber: d.invoice?.number || null,
+      createdAt: d.createdAt,
+    })),
+  });
+}));
+
+// GET /api/v1/reports/tax
+router.get('/tax', asyncHandler(async (req, res) => {
+  const { from, to } = parseDateRange(req);
+  const businessId = req.user!.businessId!;
+
+  const invoices = await prisma.invoice.findMany({
+    where: {
+      businessId,
+      status: { notIn: ['DRAFT', 'CANCELLED'] },
+      createdAt: { gte: from, lte: to },
+    },
+    include: { customer: { select: { name: true } } },
+    orderBy: { createdAt: 'desc' },
+  });
+
+  const taxCollected = invoices.reduce((s, i) => s + Number(i.tax), 0);
+  const taxRemitted = invoices.reduce((s, i) => s + Number(i.taxRemitted), 0);
+  const taxOutstanding = taxCollected - taxRemitted;
+
+  // Monthly breakdown
+  const byMonth: Record<string, { month: string; collected: number; remitted: number; outstanding: number }> = {};
+  invoices.forEach((inv) => {
+    const month = inv.createdAt.toISOString().slice(0, 7);
+    if (!byMonth[month]) byMonth[month] = { month, collected: 0, remitted: 0, outstanding: 0 };
+    byMonth[month].collected += Number(inv.tax);
+    byMonth[month].remitted += Number(inv.taxRemitted);
+  });
+  Object.values(byMonth).forEach((m) => { m.outstanding = m.collected - m.remitted; });
+
+  return success(res, {
+    period: { from, to },
+    summary: {
+      taxCollected: Number(taxCollected.toFixed(2)),
+      taxRemitted: Number(taxRemitted.toFixed(2)),
+      taxOutstanding: Number(taxOutstanding.toFixed(2)),
+    },
+    byMonth: Object.values(byMonth).sort((a, b) => a.month.localeCompare(b.month)),
+    invoices: invoices.map((i) => ({
+      id: i.id,
+      number: i.number,
+      customerName: i.customer?.name || null,
+      tax: Number(i.tax),
+      taxRemitted: Number(i.taxRemitted),
+      taxRemittedAt: i.taxRemittedAt,
+      outstanding: Number(i.tax) - Number(i.taxRemitted),
+      issueDate: i.issueDate,
+    })),
+  });
+}));
+
+// POST /api/v1/reports/tax/remit
+// Body: { invoiceIds: string[] } — mark selected invoices' tax as remitted
+router.post('/tax/remit', asyncHandler(async (req, res) => {
+  const businessId = req.user!.businessId!;
+  const { invoiceIds } = req.body as { invoiceIds: string[] };
+
+  if (!invoiceIds || !Array.isArray(invoiceIds) || invoiceIds.length === 0) {
+    return success(res, { remitted: 0 }, 'No invoices selected');
+  }
+
+  const invoices = await prisma.invoice.findMany({
+    where: { id: { in: invoiceIds }, businessId },
+    select: { id: true, tax: true, taxRemitted: true },
+  });
+
+  const now = new Date();
+  let count = 0;
+  for (const inv of invoices) {
+    if (Number(inv.tax) > Number(inv.taxRemitted)) {
+      await prisma.invoice.update({
+        where: { id: inv.id },
+        data: { taxRemitted: inv.tax, taxRemittedAt: now },
+      });
+      count++;
+    }
+  }
+
+  return success(res, { remitted: count }, `${count} invoice(s) tax marked as remitted`);
 }));
 
 export default router;

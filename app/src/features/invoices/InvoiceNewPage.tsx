@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { formatCurrency } from '@/lib/utils';
-import { X } from 'lucide-react';
+import { X, ArrowLeft } from 'lucide-react';
 import type { Customer, Product } from '@/types';
 
 interface LineItem {
@@ -89,13 +89,22 @@ export default function InvoiceNewPage() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl p-4">
-      <h1 className="text-2xl font-bold mb-6">New Invoice</h1>
+    <div className="mx-auto max-w-5xl p-4">
+      <div className="flex items-center gap-3 mb-6">
+        <button
+          onClick={() => navigate('/invoices')}
+          className="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+          aria-label="Back to invoices"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </button>
+        <h1 className="text-2xl font-bold">New Invoice</h1>
+      </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {error && <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{error}</div>}
 
-        <div className="rounded-lg border bg-card p-4 space-y-3">
+        <div className="rounded-lg border bg-card p-4 space-y-3 shadow-3d-sm">
           <h2 className="font-semibold">Details</h2>
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -116,7 +125,7 @@ export default function InvoiceNewPage() {
           </div>
         </div>
 
-        <div className="rounded-lg border bg-card p-4 space-y-3">
+        <div className="rounded-lg border bg-card p-4 space-y-3 shadow-3d-sm">
           <div className="flex items-center justify-between">
             <h2 className="font-semibold">Line Items</h2>
             <button type="button" onClick={addItem} className="text-sm font-medium text-primary">+ Add Item</button>
@@ -146,7 +155,7 @@ export default function InvoiceNewPage() {
           ))}
         </div>
 
-        <div className="rounded-lg border bg-card p-4 space-y-3">
+        <div className="rounded-lg border bg-card p-4 space-y-3 shadow-3d-sm">
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-sm font-medium">Document Discount (₦)</label>
@@ -165,7 +174,7 @@ export default function InvoiceNewPage() {
           </div>
         </div>
 
-        <div className="rounded-lg border bg-card p-4 space-y-3">
+        <div className="rounded-lg border bg-card p-4 space-y-3 shadow-3d-sm">
           <div>
             <label className="text-sm font-medium">Notes</label>
             <textarea value={form.notes} onChange={(e) => updateForm('notes', e.target.value)} className="w-full rounded-md border bg-background px-3 py-2 text-sm mt-1" rows={2} />

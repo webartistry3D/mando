@@ -1,9 +1,11 @@
-import { useState, useEffect, type FormEvent } from 'react';
-import { useParams } from 'react-router-dom';
+import { useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { formatCurrency, formatDate } from '@/lib/utils';
+import { ArrowLeft } from 'lucide-react';
 import type { Customer } from '@/types';
+import EditCustomerModal from './EditCustomerModal';
 
 interface CustomerDetail extends Customer {
   estimates?: Array<{ id: string; number: string; status: string; total: number; createdAt: string }>;
@@ -14,8 +16,9 @@ interface CustomerDetail extends Customer {
 
 export default function CustomerDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
   const [error, setError] = useState('');
 
   const { data: customer } = useQuery({
@@ -36,37 +39,6 @@ export default function CustomerDetailPage() {
     enabled: !!id,
   });
 
-  const [form, setForm] = useState({
-    name: '',
-    phone: '',
-    email: '',
-    address: '',
-    customerType: '',
-    notes: '',
-  });
-
-  useEffect(() => {
-    if (customer) {
-      setForm({
-        name: customer.name || '',
-        phone: customer.phone || '',
-        email: customer.email || '',
-        address: customer.address || '',
-        customerType: customer.customerType || '',
-        notes: customer.notes || '',
-      });
-    }
-  }, [customer]);
-
-  const updateCustomer = useMutation({
-    mutationFn: (data: typeof form) => api.patch(`/customers/${id}`, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['customer', id] });
-      setIsEditing(false);
-    },
-    onError: (err) => setError(err instanceof Error ? err.message : 'Update failed'),
-  });
-
   const deactivate = useMutation({
     mutationFn: () => api.delete(`/customers/${id}`),
     onSuccess: () => {
@@ -76,40 +48,35 @@ export default function CustomerDetailPage() {
     onError: (err) => setError(err instanceof Error ? err.message : 'Failed to deactivate'),
   });
 
-  function update<K extends keyof typeof form>(key: K, value: string) {
-    setForm((prev) => ({ ...prev, [key]: value }));
-  }
-
-  function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-    setError('');
-    updateCustomer.mutate(form);
-  }
-
   if (!customer) return <div className="p-8 text-center text-muted-foreground">Loading...</div>;
 
   return (
-    <div className="mx-auto max-w-4xl p-4 space-y-6">
+    <div className="mx-auto max-w-5xl p-4 space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">{customer.name}</h1>
-        <div className="flex gap-2">
-          {!isEditing && (
-            <>
-              <button
-                onClick={() => setIsEditing(true)}
-                className="rounded-md border px-4 py-2 text-sm font-medium"
-              >
-                Edit
-              </button>
-              {customer.isActive && (
-                <button
-                  onClick={() => deactivate.mutate()}
-                  className="rounded-md border border-destructive/30 px-4 py-2 text-sm font-medium text-destructive"
-                >
-                  Deactivate
-                </button>
-              )}
-            </>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate('/customers')}
+            className="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+            aria-label="Back to customers"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+          <h1 className="text-2xl font-bold">{customer.name}</h1>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+          <button
+            onClick={() => setIsEditOpen(true)}
+            className="rounded-md border px-4 py-2 text-sm font-medium"
+          >
+            Edit
+          </button>
+          {customer.isActive && (
+            <button
+              onClick={() => deactivate.mutate()}
+              className="rounded-md border border-destructive/30 px-4 py-2 text-sm font-medium text-destructive"
+            >
+              Deactivate
+            </button>
           )}
         </div>
       </div>
@@ -122,78 +89,60 @@ export default function CustomerDetailPage() {
         </div>
       )}
 
-      {isEditing ? (
-        <form onSubmit={handleSubmit} className="rounded-lg border bg-card p-4 space-y-4">
-          <h2 className="font-semibold">Edit Customer</h2>
-          <div className="space-y-3">
-            <div>
-              <label className="text-sm font-medium">Name</label>
-              <input type="text" value={form.name} onChange={(e) => update('name', e.target.value)} required className="w-full rounded-md border bg-background px-3 py-2 text-sm mt-1" />
-            </div>
-            <div>
-              <label className="text-sm font-medium">Phone</label>
-              <input type="tel" value={form.phone} onChange={(e) => update('phone', e.target.value)} className="w-full rounded-md border bg-background px-3 py-2 text-sm mt-1" />
-            </div>
-            <div>
-              <label className="text-sm font-medium">Email</label>
-              <input type="email" value={form.email} onChange={(e) => update('email', e.target.value)} className="w-full rounded-md border bg-background px-3 py-2 text-sm mt-1" />
-            </div>
-            <div>
-              <label className="text-sm font-medium">Address</label>
-              <input type="text" value={form.address} onChange={(e) => update('address', e.target.value)} className="w-full rounded-md border bg-background px-3 py-2 text-sm mt-1" />
-            </div>
-            <div>
-              <label className="text-sm font-medium">Customer Type</label>
-              <select value={form.customerType} onChange={(e) => update('customerType', e.target.value)} className="w-full rounded-md border bg-background px-3 py-2 text-sm mt-1">
-                <option value="">Select...</option>
-                <option value="INDIVIDUAL">Individual</option>
-                <option value="BUSINESS">Business</option>
-              </select>
-            </div>
-            <div>
-              <label className="text-sm font-medium">Notes</label>
-              <textarea value={form.notes} onChange={(e) => update('notes', e.target.value)} className="w-full rounded-md border bg-background px-3 py-2 text-sm mt-1" rows={3} />
-            </div>
-          </div>
-          <div className="flex gap-3">
-            <button type="submit" disabled={updateCustomer.isPending} className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50">
-              {updateCustomer.isPending ? 'Saving...' : 'Save'}
-            </button>
-            <button type="button" onClick={() => setIsEditing(false)} className="rounded-md border px-4 py-2 text-sm font-medium">
-              Cancel
-            </button>
-          </div>
-        </form>
-      ) : (
-        <div className="rounded-lg border bg-card p-4 space-y-2">
-          <p className="text-sm"><span className="font-medium">Phone:</span> {customer.phone || '—'}</p>
-          <p className="text-sm"><span className="font-medium">Email:</span> {customer.email || '—'}</p>
-          <p className="text-sm"><span className="font-medium">Address:</span> {customer.address || '—'}</p>
-          <p className="text-sm"><span className="font-medium">Type:</span> {customer.customerType || '—'}</p>
-          {customer.notes && <p className="text-sm"><span className="font-medium">Notes:</span> {customer.notes}</p>}
-        </div>
-      )}
+      <div className="rounded-lg border bg-card shadow-3d-sm overflow-x-auto">
+        <table className="w-full min-w-[300px] text-sm">
+          <tbody className="divide-y">
+            <tr>
+              <td className="px-4 py-2.5 w-1/3 font-medium text-muted-foreground">Phone</td>
+              <td className="px-4 py-2.5">{customer.phone || '—'}</td>
+            </tr>
+            <tr>
+              <td className="px-4 py-2.5 w-1/3 font-medium text-muted-foreground">Email</td>
+              <td className="px-4 py-2.5">{customer.email || '—'}</td>
+            </tr>
+            <tr>
+              <td className="px-4 py-2.5 w-1/3 font-medium text-muted-foreground">Address</td>
+              <td className="px-4 py-2.5">{customer.address || '—'}</td>
+            </tr>
+            <tr>
+              <td className="px-4 py-2.5 w-1/3 font-medium text-muted-foreground">Type</td>
+              <td className="px-4 py-2.5">{customer.customerType || '—'}</td>
+            </tr>
+            <tr>
+              <td className="px-4 py-2.5 w-1/3 font-medium text-muted-foreground">Notes</td>
+              <td className="px-4 py-2.5">{customer.notes || '—'}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <EditCustomerModal
+        open={isEditOpen}
+        onClose={() => setIsEditOpen(false)}
+        customer={customer || null}
+        customerId={id || ''}
+      />
 
       {transactions && (
         <>
           <div className="grid grid-cols-3 gap-3">
-            <div className="rounded-lg border bg-card p-4 text-center">
+            <div className="rounded-lg border bg-card p-4 text-center shadow-3d-sm">
               <p className="text-sm text-muted-foreground">Invoiced</p>
-              <p className="text-lg font-bold font-mono">{formatCurrency(transactions.summary.totalInvoiced)}</p>
+              <p className="text-3xl sm:text-4xl font-bold font-mono">{formatCurrency(transactions.summary.totalInvoiced)}</p>
             </div>
-            <div className="rounded-lg border bg-card p-4 text-center">
+            <div className="rounded-lg border bg-card p-4 text-center shadow-3d-sm">
               <p className="text-sm text-muted-foreground">Paid</p>
-              <p className="text-lg font-bold font-mono">{formatCurrency(transactions.summary.totalPaid)}</p>
+              <p className="text-3xl sm:text-4xl font-bold font-mono">{formatCurrency(transactions.summary.totalPaid)}</p>
             </div>
-            <div className="rounded-lg border bg-card p-4 text-center">
+            <div className="rounded-lg border bg-card p-4 text-center shadow-3d-sm">
               <p className="text-sm text-muted-foreground">Outstanding</p>
-              <p className="text-lg font-bold font-mono">{formatCurrency(transactions.summary.outstanding)}</p>
+              <p className="text-3xl sm:text-4xl font-bold font-mono">{formatCurrency(transactions.summary.outstanding)}</p>
             </div>
           </div>
 
           <div className="space-y-4">
             {transactions.invoices.length > 0 && (
-              <div className="rounded-lg border bg-card overflow-hidden">
+              <div className="rounded-lg border bg-card overflow-hidden shadow-3d">
                 <div className="px-4 py-3 border-b bg-muted/50 font-semibold text-sm">Invoices</div>
                 <div className="divide-y">
                   {transactions.invoices.map((i) => (
@@ -208,7 +157,7 @@ export default function CustomerDetailPage() {
             )}
 
             {transactions.payments.length > 0 && (
-              <div className="rounded-lg border bg-card overflow-hidden">
+              <div className="rounded-lg border bg-card overflow-hidden shadow-3d">
                 <div className="px-4 py-3 border-b bg-muted/50 font-semibold text-sm">Payments</div>
                 <div className="divide-y">
                   {transactions.payments.map((p) => (
@@ -223,7 +172,7 @@ export default function CustomerDetailPage() {
             )}
 
             {transactions.deliveries.length > 0 && (
-              <div className="rounded-lg border bg-card overflow-hidden">
+              <div className="rounded-lg border bg-card overflow-hidden shadow-3d">
                 <div className="px-4 py-3 border-b bg-muted/50 font-semibold text-sm">Deliveries</div>
                 <div className="divide-y">
                   {transactions.deliveries.map((d) => (

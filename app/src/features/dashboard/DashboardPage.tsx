@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
-import { formatCurrency, formatDate } from '@/lib/utils';
+import { formatCurrency, formatCompactCurrency, formatDate } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import RevenueChart, { type ChartDay } from './components/RevenueChart';
+import DonutChart from './components/DonutChart';
 import AssistantPanel from './components/AssistantPanel';
 import {
   Plus, FileText, Receipt, TrendingDown, UserPlus, Banknote,
@@ -71,9 +72,11 @@ const quickActions = [
   { to: '/invoices/new', icon: Receipt, label: 'New Sale', accent: 'text-emerald-600 bg-emerald-500/10' },
   { to: '/invoices/new', icon: FileText, label: 'Invoice', accent: 'text-blue-600 bg-blue-500/10' },
   { to: '/estimates/new', icon: FileText, label: 'Estimate', accent: 'text-violet-600 bg-violet-500/10' },
-  { to: '/expenses/new', icon: TrendingDown, label: 'Expense', accent: 'text-rose-600 bg-rose-500/10' },
-  { to: '/customers/new', icon: UserPlus, label: 'Customer', accent: 'text-amber-600 bg-amber-500/10' },
+  { to: '/expenses?new=1', icon: TrendingDown, label: 'Expense', accent: 'text-rose-600 bg-rose-500/10' },
+  { to: '/customers?new=1', icon: UserPlus, label: 'Customer', accent: 'text-amber-600 bg-amber-500/10' },
 ];
+
+const EXPENSE_COLORS = ['#f43f5e', '#e11d48', '#be123c', '#9f1239', '#881337', '#6b0d2a', '#4c071d', '#2e0412'];
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -84,6 +87,11 @@ export default function DashboardPage() {
   const { data: summary } = useQuery({
     queryKey: ['dashboard-summary'],
     queryFn: () => api.get<DashboardSummary>('/dashboard/summary'),
+  });
+
+  const { data: expenseCategories = [] } = useQuery({
+    queryKey: ['dashboard-expenses-by-category'],
+    queryFn: () => api.get<{ name: string; amount: number }[]>('/dashboard/expenses-by-category'),
   });
 
   const { data: activities = [] } = useQuery({
@@ -122,43 +130,26 @@ export default function DashboardPage() {
   ] : [];
 
   return (
-    <div className="mx-auto max-w-6xl p-4 sm:p-6 space-y-6">
+    <div className="mx-auto max-w-5xl p-4 sm:p-6 space-y-6">
       {/* Header */}
       <div>
         <h1 className="text-xl sm:text-2xl font-bold tracking-tight">
           {greeting}{user?.name ? `, ${user.name.split(' ')[0]}` : ''}
         </h1>
-        <p className="text-sm text-muted-foreground">Here's what's happening in your business today.</p>
+        <p className="text-sm text-muted-foreground">Here's your business update for today.</p>
       </div>
 
-      {/* 1. Quick actions */}
-      <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 sm:gap-3">
-        {quickActions.map(({ to, icon: Icon, label, accent }) => (
-          <Link
-            key={label}
-            to={to}
-            className="group flex flex-col items-center gap-2 rounded-xl border bg-card p-3.5 transition-all hover:shadow-md hover:-translate-y-0.5"
-          >
-            <span className={`relative rounded-lg p-2 ${accent}`}>
-              <Icon className="h-5 w-5" />
-              <Plus className="absolute -right-1 -top-1 h-3 w-3 rounded-full bg-card" />
-            </span>
-            <span className="text-xs font-medium">{label}</span>
-          </Link>
-        ))}
-      </div>
-
-      {/* 2. KPI cards */}
+      {/* 1. KPI cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {kpis.map(({ label, sub, value, icon: Icon, cls, trend }) => (
-          <div key={label} className="rounded-xl border bg-card p-4 space-y-2">
+          <div key={label} className="rounded-xl border bg-card p-4 space-y-2 shadow-3d-sm transition-shadow hover:shadow-3d">
             <div className="flex items-center justify-between">
               <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{label}</span>
               <span className={`rounded-lg p-1.5 ${cls}`}>
                 <Icon className="h-4 w-4" />
               </span>
             </div>
-            <p className="text-xl sm:text-2xl font-bold tracking-tight font-mono">{formatCurrency(value)}</p>
+            <p className="text-3xl sm:text-4xl font-bold tracking-tight font-mono">{formatCompactCurrency(value)}</p>
             <p className="flex items-center gap-1 text-[11px] text-muted-foreground">
               {trend === 'up' && <ArrowUpRight className="h-3 w-3 text-emerald-500" />}
               {trend === 'down' && <ArrowDownRight className="h-3 w-3 text-rose-500" />}
@@ -168,14 +159,14 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      {/* 3. Sales & Expenses chart */}
-      <div className="rounded-xl border bg-card">
+      {/* 2. Sales & Expenses chart */}
+      <div className="rounded-xl border bg-card shadow-3d">
         <div className="flex flex-wrap items-center justify-between gap-2 border-b px-4 py-3">
           <div className="flex items-center gap-3">
             <span className="font-semibold text-sm">Sales &amp; Expenses</span>
             <span className="flex items-center gap-3 text-[11px] text-muted-foreground">
               <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-emerald-500" />Revenue</span>
-              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-rose-400" />Expenses</span>
+              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-rose-500" />Expenses</span>
             </span>
           </div>
           <div className="flex items-center gap-1 rounded-lg border bg-muted/40 p-0.5">
@@ -208,10 +199,54 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* 2b. Sales & Expenses donut charts */}
+      <div className="grid gap-4 sm:grid-cols-2">
+        {/* Sales donut */}
+        <div className="rounded-xl border bg-card shadow-3d">
+          <div className="border-b px-4 py-3">
+            <span className="font-semibold text-sm">Sales Breakdown</span>
+          </div>
+          <div className="p-4 flex justify-center">
+            {summary ? (
+              <DonutChart
+                title="Sales"
+                segments={[
+                  { label: 'Revenue', value: summary.revenue.amount, color: '#10b981' },
+                  { label: 'Outstanding', value: summary.outstanding.amount, color: '#f59e0b' },
+                ]}
+              />
+            ) : (
+              <p className="py-10 text-center text-sm text-muted-foreground">Loading…</p>
+            )}
+          </div>
+        </div>
+
+        {/* Expenses donut */}
+        <div className="rounded-xl border bg-card shadow-3d">
+          <div className="border-b px-4 py-3">
+            <span className="font-semibold text-sm">Expenses by Category</span>
+          </div>
+          <div className="p-4 flex justify-center">
+            {expenseCategories.length > 0 ? (
+              <DonutChart
+                title="Expenses"
+                segments={expenseCategories.map((c, i) => ({
+                  label: c.name,
+                  value: c.amount,
+                  color: EXPENSE_COLORS[i % EXPENSE_COLORS.length],
+                }))}
+              />
+            ) : (
+              <p className="py-10 text-center text-sm text-muted-foreground">No expenses this month</p>
+            )}
+          </div>
+        </div>
+      </div>
+
       {/* 4 + 5. Outstanding & Operations side by side */}
       <div className="grid gap-4 lg:grid-cols-2">
         {/* Outstanding */}
-        <div className="rounded-xl border bg-card overflow-hidden">
+        <div className="rounded-xl border bg-card overflow-hidden shadow-3d-sm">
           <div className="flex items-center justify-between border-b px-4 py-3">
             <span className="font-semibold text-sm flex items-center gap-2">
               <Wallet className="h-4 w-4 text-amber-500" /> Outstanding
@@ -234,7 +269,7 @@ export default function DashboardPage() {
                   <Badge status={inv.status} />
                 </div>
                 <Link
-                  to={`/payments/new?invoice=${inv.id}`}
+                  to={`/payments?invoice=${inv.id}`}
                   className="rounded-md bg-emerald-600 px-2 py-1 text-[11px] font-medium text-white hover:bg-emerald-700 whitespace-nowrap"
                 >
                   Record
@@ -253,24 +288,24 @@ export default function DashboardPage() {
         </div>
 
         {/* Operations */}
-        <div className="rounded-xl border bg-card overflow-hidden">
+        <div className="rounded-xl border bg-card overflow-hidden shadow-3d-sm">
           <div className="border-b px-4 py-3 font-semibold text-sm">Operations</div>
           <div className="grid grid-cols-2 gap-px bg-border">
             <Link to="/estimates" className="bg-card p-4 hover:bg-accent/40 transition-colors">
               <div className="flex items-center gap-2 text-xs text-muted-foreground"><FileText className="h-3.5 w-3.5" /> Pending estimates</div>
-              <p className="mt-1 text-2xl font-bold">{ops?.pendingEstimates ?? '—'}</p>
+              <p className="mt-1 text-2xl font-bold font-mono">{ops?.pendingEstimates ?? '—'}</p>
             </Link>
             <Link to="/deliveries" className="bg-card p-4 hover:bg-accent/40 transition-colors">
               <div className="flex items-center gap-2 text-xs text-muted-foreground"><Truck className="h-3.5 w-3.5" /> Active deliveries</div>
-              <p className="mt-1 text-2xl font-bold">{ops?.activeDeliveries.length ?? '—'}</p>
+              <p className="mt-1 text-2xl font-bold font-mono">{ops?.activeDeliveries.length ?? '—'}</p>
             </Link>
             <Link to="/products" className="bg-card p-4 hover:bg-accent/40 transition-colors">
               <div className="flex items-center gap-2 text-xs text-muted-foreground"><PackageOpen className="h-3.5 w-3.5" /> Low-stock items</div>
-              <p className={`mt-1 text-2xl font-bold ${ops && ops.lowStock.length > 0 ? 'text-rose-600' : ''}`}>{ops?.lowStock.length ?? '—'}</p>
+              <p className={`mt-1 text-2xl font-bold font-mono ${ops && ops.lowStock.length > 0 ? 'text-rose-600' : ''}`}>{ops?.lowStock.length ?? '—'}</p>
             </Link>
             <Link to="/payments" className="bg-card p-4 hover:bg-accent/40 transition-colors">
               <div className="flex items-center gap-2 text-xs text-muted-foreground"><Banknote className="h-3.5 w-3.5" /> Recent payments</div>
-              <p className="mt-1 text-2xl font-bold">{ops?.recentPayments.length ?? '—'}</p>
+              <p className="mt-1 text-2xl font-bold font-mono">{ops?.recentPayments.length ?? '—'}</p>
             </Link>
           </div>
           {ops && ops.lowStock.length > 0 && (
@@ -289,7 +324,7 @@ export default function DashboardPage() {
       </div>
 
       {/* 6. Recent activity table */}
-      <div className="rounded-xl border bg-card overflow-hidden">
+      <div className="rounded-xl border bg-card overflow-hidden shadow-3d">
         <div className="border-b px-4 py-3 font-semibold text-sm">Recent Activity</div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -322,6 +357,23 @@ export default function DashboardPage() {
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* 6. Quick actions */}
+      <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 sm:gap-3">
+        {quickActions.map(({ to, icon: Icon, label, accent }) => (
+          <Link
+            key={label}
+            to={to}
+            className="group flex flex-col items-center gap-2 rounded-xl border bg-card p-3.5 shadow-3d-sm transition-all hover:shadow-3d hover:-translate-y-0.5"
+          >
+            <span className={`relative rounded-lg p-2 ${accent}`}>
+              <Icon className="h-5 w-5" />
+              <Plus className="absolute -right-1 -top-1 h-3 w-3 rounded-full bg-card" />
+            </span>
+            <span className="text-xs font-medium">{label}</span>
+          </Link>
+        ))}
       </div>
 
       {/* 7. Assistant */}
