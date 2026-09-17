@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import Layout from '@/components/Layout';
 import LoginPage from '@/features/auth/LoginPage';
@@ -24,18 +24,19 @@ import DeliveryDetailPage from '@/features/deliveries/DeliveryDetailPage';
 import DashboardPage from '@/features/dashboard/DashboardPage';
 import ReportsPage from '@/features/reports/ReportsPage';
 import TaxPage from '@/features/tax/TaxPage';
+import LandingPage from '@/features/landing/LandingPage';
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
         {/* Public routes */}
+        <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/auth/google/success" element={<GoogleAuthSuccessPage />} />
 
         {/* Protected routes */}
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={<ProtectedRoute allowedRoles={['OWNER', 'MANAGER']}><Layout><DashboardPage /></Layout></ProtectedRoute>} />
         {/* <Route path="/sales" element={<ProtectedRoute><Layout><SalesOverviewPage /></Layout></ProtectedRoute>} /> */}
         <Route path="/products" element={<ProtectedRoute><Layout><ProductListPage /></Layout></ProtectedRoute>} />
