@@ -118,10 +118,10 @@ router.get('/activity', asyncHandler(async (req, res) => {
 
   // Combine and sort by date
   const activities = [
-    ...invoices.map((i) => ({ type: 'invoice' as const, date: i.updatedAt, label: `${i.number} — ${i.customer?.name || 'Walk-in'}`, detail: `${i.status.replace('_', ' ')} · ₦${Number(i.total).toLocaleString()}`, link: `/invoices/${i.id}` })),
-    ...payments.map((p) => ({ type: 'payment' as const, date: p.createdAt, label: `Payment ${p.invoice?.number ? `for ${p.invoice.number}` : ''}`, detail: `₦${Number(p.amount).toLocaleString()} via ${p.paymentMethod.replace('_', ' ')}`, link: `/payments/${p.id}` })),
-    ...deliveries.map((d) => ({ type: 'delivery' as const, date: d.updatedAt, label: `${d.number} — ${d.customer?.name || 'Walk-in'}`, detail: d.status.replace('_', ' '), link: `/deliveries/${d.id}` })),
-    ...expenses.map((e) => ({ type: 'expense' as const, date: e.createdAt, label: `${e.description}`, detail: `${e.category.name} · ₦${Number(e.amount).toLocaleString()}`, link: `/expenses` })),
+    ...invoices.map((i) => ({ type: 'invoice' as const, date: i.updatedAt, label: `${i.number} — ${i.customer?.name || 'Walk-in'}`, detail: `${i.status.replace('_', ' ')} · ${Number(i.total)}`, amount: Number(i.total), link: `/invoices/${i.id}` })),
+    ...payments.map((p) => ({ type: 'payment' as const, date: p.createdAt, label: `Payment ${p.invoice?.number ? `for ${p.invoice.number}` : ''}`, detail: `via ${p.paymentMethod.replace('_', ' ')}`, amount: Number(p.amount), link: `/payments/${p.id}` })),
+    ...deliveries.map((d) => ({ type: 'delivery' as const, date: d.updatedAt, label: `${d.number} — ${d.customer?.name || 'Walk-in'}`, detail: d.status.replace('_', ' '), amount: null, link: `/deliveries/${d.id}` })),
+    ...expenses.map((e) => ({ type: 'expense' as const, date: e.createdAt, label: `${e.description}`, detail: `${e.category.name}`, amount: Number(e.amount), link: `/expenses` })),
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 15);
 
   return success(res, activities);

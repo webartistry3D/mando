@@ -27,6 +27,7 @@ interface Activity {
   date: string;
   label: string;
   detail: string;
+  amount: number | null;
   link: string;
 }
 
@@ -341,6 +342,7 @@ export default function DashboardPage() {
                 <th className="px-4 py-2 font-medium">Transaction</th>
                 <th className="px-4 py-2 font-medium">Detail</th>
                 <th className="px-4 py-2 font-medium">Type</th>
+                <th className="px-4 py-2 font-medium text-right">Amount</th>
                 <th className="px-4 py-2 font-medium text-right">Date</th>
               </tr>
             </thead>
@@ -356,11 +358,14 @@ export default function DashboardPage() {
                       {a.type}
                     </span>
                   </td>
+                  <td className="px-4 py-2.5 text-right font-mono text-muted-foreground whitespace-nowrap">
+                    {a.amount !== null ? formatCurrency(a.amount) : '—'}
+                  </td>
                   <td className="px-4 py-2.5 text-right text-muted-foreground whitespace-nowrap">{formatDate(a.date)}</td>
                 </tr>
               ))}
               {activities.length === 0 && (
-                <tr><td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">No recent activity</td></tr>
+                <tr><td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">No recent activity</td></tr>
               )}
             </tbody>
           </table>
