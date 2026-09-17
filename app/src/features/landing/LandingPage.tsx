@@ -1,4 +1,6 @@
 import { Link } from 'react-router-dom';
+import { motion, useInView } from 'framer-motion';
+import { useRef } from 'react';
 import { 
   FileText, 
   Receipt, 
@@ -11,6 +13,42 @@ import {
   Zap,
   DollarSign
 } from 'lucide-react';
+
+const sectionVariants = {
+  hidden: { opacity: 0, y: 40 },
+  visible: { 
+    opacity: 1, 
+    y: 0,
+    transition: { duration: 0.6 }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { 
+    opacity: 1, 
+    y: 0,
+    transition: { duration: 0.4 }
+  }
+};
+
+function AnimatedSection({ children, className = '', id }: { children: React.ReactNode; className?: string; id?: string }) {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: '-100px' });
+
+  return (
+    <motion.section
+      ref={ref}
+      id={id}
+      initial="hidden"
+      animate={isInView ? 'visible' : 'hidden'}
+      variants={sectionVariants}
+      className={className}
+    >
+      {children}
+    </motion.section>
+  );
+}
 
 export default function LandingPage() {
   return (
@@ -84,7 +122,7 @@ export default function LandingPage() {
       </section>
 
       {/* Social Proof */}
-      <section className="border-t py-12 bg-muted/30">
+      <AnimatedSection className="border-t py-12 bg-muted/30">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <p className="text-center text-sm text-muted-foreground mb-8">Trusted by businesses across Nigeria</p>
           <div className="flex flex-wrap items-center justify-center gap-8 md:gap-16 opacity-50">
@@ -93,10 +131,10 @@ export default function LandingPage() {
             ))}
           </div>
         </div>
-      </section>
+      </AnimatedSection>
 
       {/* Features Section */}
-      <section id="features" className="py-20 sm:py-32">
+      <AnimatedSection className="py-20 sm:py-32" id="features">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold mb-4">Everything you need to run your business</h2>
@@ -104,7 +142,19 @@ export default function LandingPage() {
               From the first sale to monthly reports, Mando handles it all without the complexity of full accounting software.
             </p>
           </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <motion.div 
+            className="grid md:grid-cols-2 lg:grid-cols-3 gap-8"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-100px' }}
+            variants={{
+              visible: {
+                transition: {
+                  staggerChildren: 0.1
+                }
+              }
+            }}
+          >
             {[
               {
                 icon: Receipt,
@@ -137,26 +187,38 @@ export default function LandingPage() {
                 description: 'Get instant insights into your sales, expenses, and profits. Know your numbers at a glance.'
               }
             ].map((feature) => (
-              <div key={feature.title} className="rounded-xl border bg-card p-6 shadow-3d-sm hover:shadow-3d transition-shadow">
+              <motion.div key={feature.title} variants={itemVariants} className="rounded-xl border bg-card p-6 shadow-3d-sm hover:shadow-3d transition-shadow">
                 <div className="rounded-lg bg-emerald-100 p-3 w-fit mb-4 dark:bg-emerald-950">
                   <feature.icon className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
                 </div>
                 <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
                 <p className="text-muted-foreground">{feature.description}</p>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
-      </section>
+      </AnimatedSection>
 
       {/* How it Works */}
-      <section id="how-it-works" className="py-20 sm:py-32 bg-muted/30">
+      <AnimatedSection id="how-it-works" className="py-20 sm:py-32 bg-muted/30">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold mb-4">Get started in minutes</h2>
             <p className="text-lg text-muted-foreground">No complex setup. Start invoicing right away.</p>
           </div>
-          <div className="grid md:grid-cols-3 gap-8">
+          <motion.div 
+            className="grid md:grid-cols-3 gap-8"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-100px' }}
+            variants={{
+              visible: {
+                transition: {
+                  staggerChildren: 0.2
+                }
+              }
+            }}
+          >
             {[
               {
                 step: '1',
@@ -174,20 +236,20 @@ export default function LandingPage() {
                 description: 'Monitor payments, deliveries, and expenses. View your dashboard to see your business health.'
               }
             ].map((step) => (
-              <div key={step.step} className="text-center">
+              <motion.div key={step.step} variants={itemVariants} className="text-center">
                 <div className="inline-flex items-center justify-center h-16 w-16 rounded-full bg-emerald-600 text-white text-2xl font-bold mb-4">
                   {step.step}
                 </div>
                 <h3 className="text-xl font-semibold mb-2">{step.title}</h3>
                 <p className="text-muted-foreground">{step.description}</p>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
-      </section>
+      </AnimatedSection>
 
       {/* Mobile-First Section */}
-      <section className="py-20 sm:py-32">
+      <AnimatedSection className="py-20 sm:py-32">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
@@ -196,37 +258,67 @@ export default function LandingPage() {
                 Mando is a Progressive Web App designed for mobile-first. Install it on your phone 
                 and manage your business from anywhere—offline-friendly and always ready.
               </p>
-              <ul className="space-y-4">
+              <motion.ul 
+                className="space-y-4"
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, margin: '-100px' }}
+                variants={{
+                  visible: {
+                    transition: {
+                      staggerChildren: 0.1
+                    }
+                  }
+                }}
+              >
                 {[
                   'Works on any device—phone, tablet, or desktop',
                   'Install as an app for quick access',
                   'Offline support for critical features',
                   'Fast and lightweight'
                 ].map((item) => (
-                  <li key={item} className="flex items-start gap-3">
+                  <motion.li key={item} variants={itemVariants} className="flex items-start gap-3">
                     <CheckCircle className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
                     <span className="text-muted-foreground">{item}</span>
-                  </li>
+                  </motion.li>
                 ))}
-              </ul>
+              </motion.ul>
             </div>
-            <div className="relative">
+            <motion.div 
+              className="relative"
+              initial={{ opacity: 0, x: 50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, margin: '-100px' }}
+              transition={{ duration: 0.6, ease: 'easeOut' }}
+            >
               <div className="rounded-2xl border bg-card p-8 shadow-3d">
                 <Smartphone className="h-48 w-full text-muted-foreground" />
               </div>
-            </div>
+            </motion.div>
           </div>
         </div>
-      </section>
+      </AnimatedSection>
 
       {/* Pricing Section */}
-      <section id="pricing" className="py-20 sm:py-32 bg-muted/30">
+      <AnimatedSection id="pricing" className="py-20 sm:py-32 bg-muted/30">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold mb-4">Simple, transparent pricing</h2>
             <p className="text-lg text-muted-foreground">Start free. Scale as you grow.</p>
           </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          <motion.div 
+            className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-100px' }}
+            variants={{
+              visible: {
+                transition: {
+                  staggerChildren: 0.15
+                }
+              }
+            }}
+          >
             {[
               {
                 name: 'Free',
@@ -245,7 +337,7 @@ export default function LandingPage() {
               },
               {
                 name: 'Pro',
-                price: '₦6,000',
+                price: '₦...',
                 period: '/month',
                 description: 'For growing businesses needing more',
                 features: [
@@ -275,7 +367,7 @@ export default function LandingPage() {
                 popular: false
               }
             ].map((plan) => (
-              <div key={plan.name} className={`rounded-xl border bg-card p-6 shadow-3d-sm hover:shadow-3d transition-shadow ${plan.popular ? 'border-emerald-500 ring-2 ring-emerald-500/20' : ''}`}>
+              <motion.div key={plan.name} variants={itemVariants} className={`rounded-xl border bg-card p-6 shadow-3d-sm hover:shadow-3d transition-shadow ${plan.popular ? 'border-emerald-500 ring-2 ring-emerald-500/20' : ''}`}>
                 {plan.popular && (
                   <div className="text-center mb-4">
                     <span className="inline-flex items-center rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
@@ -307,19 +399,31 @@ export default function LandingPage() {
                 >
                   {plan.cta}
                 </Link>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
-      </section>
+      </AnimatedSection>
 
       {/* FAQ Section */}
-      <section id="faq" className="py-20 sm:py-32">
+      <AnimatedSection id="faq" className="py-20 sm:py-32">
         <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold mb-4">Frequently asked questions</h2>
           </div>
-          <div className="space-y-6">
+          <motion.div 
+            className="space-y-6"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-100px' }}
+            variants={{
+              visible: {
+                transition: {
+                  staggerChildren: 0.1
+                }
+              }
+            }}
+          >
             {[
               {
                 q: 'Is Mando really free?',
@@ -342,18 +446,24 @@ export default function LandingPage() {
                 a: 'Yes. Mando is built for Nigerian businesses with support for VAT calculations and tax-compliant invoicing.'
               }
             ].map((faq) => (
-              <div key={faq.q} className="border-b pb-6">
+              <motion.div key={faq.q} variants={itemVariants} className="border-b pb-6">
                 <h3 className="font-semibold mb-2">{faq.q}</h3>
                 <p className="text-muted-foreground">{faq.a}</p>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
-      </section>
+      </AnimatedSection>
 
       {/* CTA Section */}
-      <section className="py-20 sm:py-32 bg-emerald-600">
-        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
+      <AnimatedSection className="py-20 sm:py-32 bg-emerald-600">
+        <motion.div 
+          className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center"
+          initial={{ opacity: 0, scale: 0.9 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true, margin: '-100px' }}
+          transition={{ duration: 0.6, ease: 'easeOut' }}
+        >
           <h2 className="text-3xl sm:text-4xl font-bold text-white mb-6">
             Ready to take control of your business?
           </h2>
@@ -367,8 +477,8 @@ export default function LandingPage() {
             Get started free
             <ArrowRight className="h-4 w-4" />
           </Link>
-        </div>
-      </section>
+        </motion.div>
+      </AnimatedSection>
 
       {/* Footer */}
       <footer className="border-t py-12 bg-muted/30">
