@@ -78,6 +78,13 @@ const quickActions = [
 
 const EXPENSE_COLORS = ['#f43f5e', '#e11d48', '#be123c', '#9f1239', '#881337', '#6b0d2a', '#4c071d', '#2e0412'];
 
+const activityTypeClasses: Record<Activity['type'], string> = {
+  invoice: 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300',
+  payment: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300',
+  delivery: 'bg-violet-100 text-violet-700 dark:bg-violet-950 dark:text-violet-300',
+  expense: 'bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300',
+};
+
 export default function DashboardPage() {
   const { user } = useAuth();
   const [range, setRange] = useState<Range>('7d');
@@ -344,7 +351,7 @@ export default function DashboardPage() {
                   </td>
                   <td className="px-4 py-2.5 text-muted-foreground">{a.detail}</td>
                   <td className="px-4 py-2.5">
-                    <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${activityTypeClasses[a.type]}`}>
                       {a.type}
                     </span>
                   </td>

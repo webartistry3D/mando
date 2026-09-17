@@ -279,9 +279,7 @@ router.get('/operations', asyncHandler(async (req, res) => {
   });
 }));
 
-// GET /api/v1/dashboard/insights
-router.get('/insights', asyncHandler(async (req, res) => {
-  const businessId = req.user!.businessId!;
+async function buildInsights(businessId: string) {
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -387,7 +385,61 @@ router.get('/insights', asyncHandler(async (req, res) => {
     });
   }
 
-  return success(res, insights);
+  return insights;
+}
+
+// GET /api/v1/dashboard/insights
+router.get('/insights', asyncHandler(async (req, res) => {
+  return success(res, await buildInsights(req.user!.businessId!));
+}));
+
+// POST /api/v1/dashboard/assistant
+router.post('/assistant', asyncHandler(async (req, res) => {
+  const businessId = req.user!.businessId!;
+  const query = String(req.body.query || '').toLowerCase();
+  const insights = await buildInsights(businessId);
+
+  const keywordMap: Record<string, string[]> = {
+    overdue: ['alert'],
+    invoice: ['alert'],
+    unpaid: ['alert'],
+    debt: ['alert'],
+    stock: ['package'],
+    inventory: ['package'],
+    low: ['package'],
+    estimate: ['file'],
+    quote: ['file'],
+    delivery: ['truck'],
+    shipment: ['truck'],
+    payment: ['cash'],
+    collected: ['cash'],
+    expense: ['trending'],
+    spend: ['trending'],
+  };
+
+  const matchedKey = Object.keys(keywordMap).find((k) => query.includes(k));
+  let answer: string;
+
+  if (matchedKey) {
+    const icons = keywordMap[matchedKey];
+    const match = insights.find((ins) => icons.includes(ins.icon));
+    answer = match ? match.text : `No ${matchedKey} issues to report right now.`;
+  } else if (query.includes('follow') || query.includes('today')) {
+    const warnings = insights.filter((ins) => ins.severity === 'warning');
+    if (warnings.length > 0) {
+      answer = warnings.map((ins) => ins.text).join(' ');
+    } else if (insights.length > 0) {
+      answer = insights[0].text;
+    } else {
+      answer = 'All clear — nothing needs your attention right now.';
+    }
+  } else if (query.includes('help') || query.includes('what can you do')) {
+    answer = 'You can ask about overdue invoices, low stock, pending estimates, active deliveries, payments, or expenses.';
+  } else {
+    answer = "I don't understand. Try asking about overdue invoices, low stock, pending estimates, deliveries, payments, or expenses.";
+  }
+
+  return success(res, { query: req.body.query, answer });
 }));
 
 export default router;

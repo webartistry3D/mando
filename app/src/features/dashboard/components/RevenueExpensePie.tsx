@@ -15,12 +15,22 @@ export default function RevenueExpensePie({ revenue, expenses }: Props) {
   const size = 160;
   const stroke = 28;
   const radius = (size - stroke) / 2;
-  const circumference = 2 * Math.PI * radius;
 
-  // Revenue arc
-  const revenueLen = circumference * revenuePct;
-  // Expenses arc starts where revenue ends
-  const expensesLen = circumference * expensesPct;
+  function arcPath(startAngle: number, arcAngle: number) {
+    const cx = size / 2;
+    const cy = size / 2;
+    const sx = cx + radius * Math.cos(startAngle);
+    const sy = cy + radius * Math.sin(startAngle);
+    const ex = cx + radius * Math.cos(startAngle + arcAngle);
+    const ey = cy + radius * Math.sin(startAngle + arcAngle);
+    if (arcAngle >= 2 * Math.PI - 0.01) {
+      const mx = cx + radius * Math.cos(startAngle + Math.PI);
+      const my = cy + radius * Math.sin(startAngle + Math.PI);
+      return `M ${sx} ${sy} A ${radius} ${radius} 0 1 1 ${mx} ${my} A ${radius} ${radius} 0 1 1 ${sx} ${sy}`;
+    }
+    const largeArc = arcAngle > Math.PI ? 1 : 0;
+    return `M ${sx} ${sy} A ${radius} ${radius} 0 ${largeArc} 1 ${ex} ${ey}`;
+  }
 
   return (
     <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-center sm:gap-6">
@@ -35,38 +45,28 @@ export default function RevenueExpensePie({ revenue, expenses }: Props) {
           strokeWidth={stroke}
           className="text-muted/40"
         />
-        {/* Revenue arc (emerald) */}
         {revenuePct > 0 && (
-          <motion.circle
-            cx={size / 2}
-            cy={size / 2}
-            r={radius}
+          <motion.path
+            d={arcPath(-Math.PI / 2, revenuePct * 2 * Math.PI)}
             fill="none"
             stroke="#10b981"
             strokeWidth={stroke}
-            initial={{ strokeDasharray: [0, circumference] }}
-            animate={{ strokeDasharray: [revenueLen, circumference - revenueLen] }}
-            transition={{ duration: 2.7, ease: 'easeOut' }}
-            strokeDashoffset={0}
-            transform={`rotate(-90 ${size / 2} ${size / 2})`}
             strokeLinecap="butt"
+            initial={{ pathLength: 0 }}
+            animate={{ pathLength: 1 }}
+            transition={{ duration: 2.7, ease: 'easeOut' }}
           />
         )}
-        {/* Expenses arc (rose) */}
         {expensesPct > 0 && (
-          <motion.circle
-            cx={size / 2}
-            cy={size / 2}
-            r={radius}
+          <motion.path
+            d={arcPath(-Math.PI / 2 + revenuePct * 2 * Math.PI, expensesPct * 2 * Math.PI)}
             fill="none"
             stroke="#f43f5e"
             strokeWidth={stroke}
-            initial={{ strokeDasharray: [0, circumference] }}
-            animate={{ strokeDasharray: [expensesLen, circumference - expensesLen] }}
-            transition={{ duration: 2.7, delay: 0.15, ease: 'easeOut' }}
-            strokeDashoffset={-revenueLen}
-            transform={`rotate(-90 ${size / 2} ${size / 2})`}
             strokeLinecap="butt"
+            initial={{ pathLength: 0 }}
+            animate={{ pathLength: 1 }}
+            transition={{ duration: 2.7, delay: 0.15, ease: 'easeOut' }}
           />
         )}
         {/* Center text */}

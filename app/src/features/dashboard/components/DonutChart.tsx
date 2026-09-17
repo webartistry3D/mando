@@ -45,22 +45,41 @@ export default function DonutChart({ title, segments, size = 140, hideLegend }: 
           strokeWidth={stroke}
           className="text-muted/30"
         />
-        {total > 0 && arcs.map((arc, i) => (
-          <motion.circle
-            key={i}
-            cx={size / 2}
-            cy={size / 2}
-            r={radius}
-            fill="none"
-            stroke={arc.color}
-            strokeWidth={stroke}
-            initial={{ strokeDasharray: [0, circumference] }}
-            animate={{ strokeDasharray: [arc.len, circumference - arc.len] }}
-            transition={{ duration: 2.7, delay: i * 0.15, ease: 'easeOut' }}
-            strokeDashoffset={-arc.offset}
-            transform={`rotate(-90 ${size / 2} ${size / 2})`}
-          />
-        ))}
+        {total > 0 && arcs.map((arc, i) => {
+          const startAngle = (arc.offset / circumference) * 2 * Math.PI - Math.PI / 2;
+          const arcAngle = (arc.len / circumference) * 2 * Math.PI;
+          const endAngle = startAngle + arcAngle;
+          const cx = size / 2;
+          const cy = size / 2;
+          const sx = cx + radius * Math.cos(startAngle);
+          const sy = cy + radius * Math.sin(startAngle);
+          const ex = cx + radius * Math.cos(endAngle);
+          const ey = cy + radius * Math.sin(endAngle);
+          const largeArc = arcAngle > Math.PI ? 1 : 0;
+          const isFull = arcAngle >= 2 * Math.PI - 0.01;
+          let d: string;
+          if (isFull) {
+            const midAngle = startAngle + Math.PI;
+            const mx = cx + radius * Math.cos(midAngle);
+            const my = cy + radius * Math.sin(midAngle);
+            d = `M ${sx} ${sy} A ${radius} ${radius} 0 1 1 ${mx} ${my} A ${radius} ${radius} 0 1 1 ${sx} ${sy}`;
+          } else {
+            d = `M ${sx} ${sy} A ${radius} ${radius} 0 ${largeArc} 1 ${ex} ${ey}`;
+          }
+          return (
+            <motion.path
+              key={i}
+              d={d}
+              fill="none"
+              stroke={arc.color}
+              strokeWidth={stroke}
+              strokeLinecap="butt"
+              initial={{ pathLength: 0 }}
+              animate={{ pathLength: 1 }}
+              transition={{ duration: 2.7, delay: i * 0.15, ease: 'easeOut' }}
+            />
+          );
+        })}
         <text x={size / 2} y={size / 2 - 2} textAnchor="middle" className="fill-muted-foreground" style={{ fontSize: 10, fontWeight: 600 }}>
           {title}
         </text>

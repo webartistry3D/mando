@@ -1,34 +1,6 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
-import {
-  Sparkles, AlertTriangle, Package, FileText, Truck,
-  TrendingUp, Banknote, CheckCircle2, Send,
-} from 'lucide-react';
-
-interface Insight {
-  icon: string;
-  text: string;
-  link?: string;
-  severity: 'info' | 'warning' | 'success';
-}
-
-const iconMap: Record<string, typeof Sparkles> = {
-  alert: AlertTriangle,
-  package: Package,
-  file: FileText,
-  truck: Truck,
-  trending: TrendingUp,
-  cash: Banknote,
-  check: CheckCircle2,
-};
-
-const severityClass: Record<string, string> = {
-  warning: 'border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-200',
-  success: 'border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-200',
-  info: 'border-border bg-muted/50 text-foreground',
-};
+import { Sparkles, Send, User } from 'lucide-react';
 
 const SUGGESTIONS = [
   'What do I need to follow up on today?',
@@ -36,50 +8,82 @@ const SUGGESTIONS = [
   'What is low in stock?',
 ];
 
+interface Message {
+  role: 'user' | 'assistant';
+  text: string;
+}
+
 export default function AssistantPanel() {
   const [query, setQuery] = useState('');
-  const [asked, setAsked] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      role: 'assistant',
+      text: 'Hi! Ask me about overdue invoices, low stock, pending estimates, active deliveries, payments, or expenses.',
+    },
+  ]);
 
-  const { data: insights = [] } = useQuery({
-    queryKey: ['dashboard-insights'],
-    queryFn: () => api.get<Insight[]>('/dashboard/insights'),
-  });
-
-  const submit = (q: string) => {
+  const submit = async (q: string) => {
     if (!q.trim()) return;
-    setQuery(q);
-    setAsked(true);
+    setMessages((prev) => [...prev, { role: 'user', text: q }]);
+    setQuery('');
+    setLoading(true);
+    try {
+      const res = await api.post<{ query: string; answer: string }>('/dashboard/assistant', { query: q });
+      setMessages((prev) => [...prev, { role: 'assistant', text: res.answer }]);
+    } catch {
+      setMessages((prev) => [...prev, { role: 'assistant', text: 'Sorry, I could not process that. Please try again.' }]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="rounded-xl border bg-card overflow-hidden shadow-3d">
+    <div className="rounded-xl border bg-card overflow-hidden shadow-3d flex flex-col h-full min-h-[360px]">
       <div className="border-b bg-gradient-to-r from-violet-500/10 via-transparent to-transparent px-4 py-3 flex items-center gap-2">
         <Sparkles className="h-4 w-4 text-violet-500" />
         <span className="font-semibold text-sm">Business Assistant</span>
       </div>
 
-      <div className="p-4 space-y-3">
-        <form
-          onSubmit={(e) => { e.preventDefault(); submit(query); }}
-          className="flex items-center gap-2"
-        >
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Ask your Business Assistant…"
-            className="flex-1 rounded-lg border bg-background px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-violet-500/40"
-          />
-          <button
-            type="submit"
-            className="rounded-lg bg-violet-600 p-2.5 text-white hover:bg-violet-700 transition-colors"
-            aria-label="Ask"
-          >
-            <Send className="h-4 w-4" />
-          </button>
-        </form>
+      <div className="flex-1 p-4 flex flex-col gap-4 overflow-y-auto">
+        <div className="space-y-3">
+          {messages.map((m, i) => (
+            <div
+              key={i}
+              className={`flex items-end gap-2 ${m.role === 'user' ? 'flex-row-reverse' : ''}`}
+            >
+              <div
+                className={`shrink-0 rounded-full p-1.5 ${
+                  m.role === 'user' ? 'bg-violet-100 text-violet-600' : 'bg-muted text-muted-foreground'
+                }`}
+              >
+                {m.role === 'user' ? <User className="h-3 w-3" /> : <Sparkles className="h-3 w-3" />}
+              </div>
+              <div
+                className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
+                  m.role === 'user'
+                    ? 'bg-violet-600 text-white rounded-br-md'
+                    : 'bg-muted/60 text-foreground rounded-bl-md'
+                }`}
+              >
+                {m.text}
+              </div>
+            </div>
+          ))}
+          {loading && (
+            <div className="flex items-end gap-2">
+              <div className="shrink-0 rounded-full bg-muted p-1.5 text-muted-foreground">
+                <Sparkles className="h-3 w-3" />
+              </div>
+              <div className="bg-muted/60 rounded-2xl rounded-bl-md px-4 py-2.5 text-sm text-muted-foreground">
+                Thinking…
+              </div>
+            </div>
+          )}
+        </div>
 
-        {!asked && (
-          <div className="flex flex-wrap gap-2">
+        {messages.length <= 1 && (
+          <div className="flex flex-wrap gap-2 pt-2">
             {SUGGESTIONS.map((s) => (
               <button
                 key={s}
@@ -91,28 +95,28 @@ export default function AssistantPanel() {
             ))}
           </div>
         )}
-
-        {asked && (
-          <p className="text-xs text-muted-foreground italic">"{query}" — here's what needs attention:</p>
-        )}
-
-        <div className="space-y-2">
-          {insights.map((ins, i) => {
-            const Icon = iconMap[ins.icon] || Sparkles;
-            const inner = (
-              <div className={`flex items-start gap-3 rounded-lg border px-3 py-2.5 text-sm ${severityClass[ins.severity]}`}>
-                <Icon className="h-4 w-4 mt-0.5 shrink-0" />
-                <span className="flex-1">{ins.text}</span>
-              </div>
-            );
-            return ins.link ? (
-              <Link key={i} to={ins.link} className="block hover:opacity-80 transition-opacity">{inner}</Link>
-            ) : (
-              <div key={i}>{inner}</div>
-            );
-          })}
-        </div>
       </div>
+
+      <form
+        onSubmit={(e) => { e.preventDefault(); submit(query); }}
+        className="border-t p-4 flex items-center gap-2"
+      >
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submit(query); } }}
+          placeholder="Ask your Business Assistant…"
+          className="flex-1 rounded-lg border bg-background px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-violet-500/40"
+        />
+        <button
+          type="submit"
+          disabled={loading || !query.trim()}
+          className="rounded-lg bg-violet-600 p-2.5 text-white hover:bg-violet-700 transition-colors disabled:opacity-50"
+          aria-label="Ask"
+        >
+          <Send className="h-4 w-4" />
+        </button>
+      </form>
     </div>
   );
 }

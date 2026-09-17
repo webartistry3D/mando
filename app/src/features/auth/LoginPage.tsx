@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
+import ThemeToggle from '@/components/ThemeToggle';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1';
 
@@ -34,6 +35,9 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted/50 px-4">
+      <div className="fixed left-1/2 top-4 z-50 -translate-x-1/2">
+        <ThemeToggle />
+      </div>
       <div className="w-full max-w-md space-y-6">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
