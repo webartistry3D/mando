@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion';
 import { formatCurrency } from '@/lib/utils';
 
 interface Props {
@@ -36,14 +37,16 @@ export default function RevenueExpensePie({ revenue, expenses }: Props) {
         />
         {/* Revenue arc (emerald) */}
         {revenuePct > 0 && (
-          <circle
+          <motion.circle
             cx={size / 2}
             cy={size / 2}
             r={radius}
             fill="none"
             stroke="#10b981"
             strokeWidth={stroke}
-            strokeDasharray={`${revenueLen} ${circumference - revenueLen}`}
+            initial={{ strokeDasharray: [0, circumference] }}
+            animate={{ strokeDasharray: [revenueLen, circumference - revenueLen] }}
+            transition={{ duration: 2.7, ease: 'easeOut' }}
             strokeDashoffset={0}
             transform={`rotate(-90 ${size / 2} ${size / 2})`}
             strokeLinecap="butt"
@@ -51,14 +54,16 @@ export default function RevenueExpensePie({ revenue, expenses }: Props) {
         )}
         {/* Expenses arc (rose) */}
         {expensesPct > 0 && (
-          <circle
+          <motion.circle
             cx={size / 2}
             cy={size / 2}
             r={radius}
             fill="none"
             stroke="#f43f5e"
             strokeWidth={stroke}
-            strokeDasharray={`${expensesLen} ${circumference - expensesLen}`}
+            initial={{ strokeDasharray: [0, circumference] }}
+            animate={{ strokeDasharray: [expensesLen, circumference - expensesLen] }}
+            transition={{ duration: 2.7, delay: 0.15, ease: 'easeOut' }}
             strokeDashoffset={-revenueLen}
             transform={`rotate(-90 ${size / 2} ${size / 2})`}
             strokeLinecap="butt"

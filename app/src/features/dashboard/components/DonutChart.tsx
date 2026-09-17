@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion';
 import { formatCurrency } from '@/lib/utils';
 
 interface Segment {
@@ -45,7 +46,7 @@ export default function DonutChart({ title, segments, size = 140, hideLegend }: 
           className="text-muted/30"
         />
         {total > 0 && arcs.map((arc, i) => (
-          <circle
+          <motion.circle
             key={i}
             cx={size / 2}
             cy={size / 2}
@@ -53,7 +54,9 @@ export default function DonutChart({ title, segments, size = 140, hideLegend }: 
             fill="none"
             stroke={arc.color}
             strokeWidth={stroke}
-            strokeDasharray={`${arc.len} ${circumference - arc.len}`}
+            initial={{ strokeDasharray: [0, circumference] }}
+            animate={{ strokeDasharray: [arc.len, circumference - arc.len] }}
+            transition={{ duration: 2.7, delay: i * 0.15, ease: 'easeOut' }}
             strokeDashoffset={-arc.offset}
             transform={`rotate(-90 ${size / 2} ${size / 2})`}
           />

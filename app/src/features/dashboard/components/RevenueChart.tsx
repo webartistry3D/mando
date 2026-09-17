@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { motion } from 'framer-motion';
 import { formatCurrency } from '@/lib/utils';
 
 export interface ChartDay {
@@ -93,19 +94,21 @@ export default function RevenueChart({ days }: Props) {
                   className="fill-accent/60"
                 />
               )}
-              <rect
+              <motion.rect
                 x={cx - barW - 1}
-                y={yFor(d.revenue)}
+                initial={{ y: PAD_T + innerH, height: 0 }}
+                animate={{ y: yFor(d.revenue), height: rH }}
+                transition={{ duration: 2.7, delay: i * 0.03, ease: 'easeOut' }}
                 width={barW}
-                height={rH}
                 rx={2}
                 className="fill-emerald-500"
               />
-              <rect
+              <motion.rect
                 x={cx + 1}
-                y={yFor(d.expenses)}
+                initial={{ y: PAD_T + innerH, height: 0 }}
+                animate={{ y: yFor(d.expenses), height: eH }}
+                transition={{ duration: 0.7, delay: i * 0.03 + 0.05, ease: 'easeOut' }}
                 width={barW}
-                height={eH}
                 rx={2}
                 className="fill-rose-500"
               />
