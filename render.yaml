@@ -17,6 +17,8 @@ services:
         generateValue: true
       - key: CORS_ORIGIN
         sync: false
+      - key: CLIENT_URL
+        sync: false
 
   # Mando App — Vite PWA frontend
   - type: web

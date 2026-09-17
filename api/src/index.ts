@@ -28,8 +28,10 @@ app.use(cors({
     const allowed = [
       process.env.CLIENT_URL || 'http://localhost:5173',
       process.env.CORS_ORIGIN || 'http://localhost:5173',
-    ];
-    if (!origin || allowed.includes(origin)) return cb(null, true);
+    ].map((url) => url?.replace(/\/$/, ''));
+    if (!origin || allowed.includes(origin) || allowed.includes(origin?.replace(/\/$/, ''))) {
+      return cb(null, true);
+    }
     cb(new Error('CORS not allowed'));
   },
   credentials: true,
