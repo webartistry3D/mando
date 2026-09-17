@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mando-shell-v1';
+const CACHE_NAME = 'mando-shell-v2';
 const SHELL_ASSETS = [
   '/',
   '/index.html',
@@ -23,8 +23,12 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const { request } = event;
 
-  // Skip non-GET and API requests — always go to network for API
-  if (request.method !== 'GET' || request.url.includes('/api/')) {
+  // Skip non-GET, API, non-HTTP(S), and cross-origin requests (e.g. chrome-extension://)
+  if (
+    request.method !== 'GET' ||
+    request.url.includes('/api/') ||
+    !request.url.startsWith(self.location.origin)
+  ) {
     return;
   }
 
