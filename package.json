@@ -2,7 +2,7 @@
   "name": "mando",
   "version": "1.0.0",
   "private": true,
-  "description": "Mando - Nigerian SME Business Operations PWA",
+  "description": "mando - Nigerian SME Business Operations PWA",
   "workspaces": [
     "app",
     "api"

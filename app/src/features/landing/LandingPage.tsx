@@ -61,7 +61,7 @@ export default function LandingPage() {
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600">
                 <span className="text-sm font-bold text-white">m</span>
               </div>
-              <span className="text-xl font-bold">Mando</span>
+              <span className="text-xl font-bold">mando</span>
             </div>
             <div className="hidden md:flex items-center gap-6">
               <a href="#features" className="text-sm text-muted-foreground hover:text-foreground">Features</a>
@@ -116,7 +116,7 @@ export default function LandingPage() {
                 View demo
               </Link>
             </div>
-            <p className="mt-4 text-sm text-muted-foreground">No credit card required • Free forever for small businesses</p>
+            {/*<p className="mt-4 text-sm text-muted-foreground">No credit card required • Free forever for small businesses</p>*/}
           </div>
         </div>
       </section>
@@ -139,7 +139,7 @@ export default function LandingPage() {
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold mb-4">Everything you need to run your business</h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              From the first sale to monthly reports, Mando handles it all without the complexity of full accounting software.
+              From the first sale to monthly reports, mando handles it all without the complexity of full accounting software.
             </p>
           </div>
           <motion.div 
@@ -255,7 +255,7 @@ export default function LandingPage() {
             <div>
               <h2 className="text-3xl sm:text-4xl font-bold mb-6">Your business in your pocket</h2>
               <p className="text-lg text-muted-foreground mb-6">
-                Mando is a Progressive Web App designed for mobile-first. Install it on your phone 
+                mando is a Progressive Web App designed for mobile-first. Install it on your phone 
                 and manage your business from anywhere—offline-friendly and always ready.
               </p>
               <motion.ul 
@@ -325,26 +325,29 @@ export default function LandingPage() {
                 price: '₦0',
                 description: 'Perfect for startups and small businesses',
                 features: [
-                  'Unlimited invoices',
+                  'Unlimited products & services',
+                  'Low-stock alerts',
                   'Unlimited customers',
-                  'Basic expense tracking',
-                  'Delivery tracking',
-                  'Standard reports',
+                  '6 invoices per month',
+                  'PDF invoices and WhatsApp sharing',
+                  'Unlimited expense tracking',
+                  'Unlimited delivery tracking',
+                  'Unlimited reporting',
+                  
                   'Email support'
                 ],
                 cta: 'Get started',
                 popular: false
               },
               {
-                name: 'Pro',
-                price: '₦...',
+                name: 'Solopreneur',
+                price: '₦2,000',
                 period: '/month',
-                description: 'For growing businesses needing more',
+                description: 'For Solopreneurs',
                 features: [
                   'Everything in Free',
-                  'Advanced reports',
-                  'Team collaboration',
-                  'Custom branding',
+                  'Unlimited invoices',
+                  'Onboarding assistance',
                   'Priority support',
                   'API access'
                 ],
@@ -352,26 +355,36 @@ export default function LandingPage() {
                 popular: true
               },
               {
-                name: 'Enterprise',
-                price: 'Custom',
-                description: 'For large teams with custom needs',
+                name: 'Entrepreneur',
+                price: '₦4,000',
+                period: '/month',
+                description: 'For Entrepreneurs',
                 features: [
-                  'Everything in Pro',
-                  'Custom integrations',
-                  'Dedicated account manager',
-                  'SLA guarantee',
-                  'Onboarding assistance',
-                  'White-label options'
+                  'Everything in Solopreneur',
+                  'Plus 2 staff accounts',
                 ],
                 cta: 'Contact sales',
-                popular: false
-              }
+                popular: true
+              },
+              {
+                name: 'Business',
+                price: '₦10,000',
+                period: '/month',
+                description: 'For Small Businesses',
+                features: [
+                  'Everything in Entrepreneur',
+                  'Plus 20 staff accounts',
+                  'Dedicated account manager'
+                ],
+                cta: 'Contact sales',
+                popular: true
+              },
             ].map((plan) => (
               <motion.div key={plan.name} variants={itemVariants} className={`rounded-xl border bg-card p-6 shadow-3d-sm hover:shadow-3d transition-shadow ${plan.popular ? 'border-emerald-500 ring-2 ring-emerald-500/20' : ''}`}>
                 {plan.popular && (
                   <div className="text-center mb-4">
                     <span className="inline-flex items-center rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
-                      Most popular
+                      Very popular
                     </span>
                   </div>
                 )}
@@ -426,24 +439,20 @@ export default function LandingPage() {
           >
             {[
               {
-                q: 'Is Mando really free?',
-                a: 'Yes! The Free plan is forever free for small businesses. You get unlimited invoices, customers, and essential features at no cost.'
-              },
-              {
                 q: 'Do I need to install anything?',
-                a: 'No. Mando is a web app that works in your browser. You can also install it as a PWA on your phone for app-like experience.'
+                a: 'No. mando is a progressive web app that lives on your phone without downloading anything. Just open it in your browser the first time and you\'re ready to go!'
               },
               {
                 q: 'Is my data secure?',
-                a: 'Absolutely. We use industry-standard encryption and security practices. Your data is backed up regularly and only accessible to you.'
+                a: 'Absolutely. We utilize industry-standard AES-256 and TLS encryption, and adhere to international security practices. Your data is backed up regularly and only accessible to you.'
               },
               {
-                q: 'Can I use Mando offline?',
-                a: 'Yes! As a PWA, Mando works offline for key features. Your data syncs automatically when you reconnect.'
+                q: 'Can I use mando offline?',
+                a: 'Yes! As a PWA, mando works offline for key features. Your data syncs automatically when you reconnect.'
               },
               {
-                q: 'Does Mando support Nigerian taxes?',
-                a: 'Yes. Mando is built for Nigerian businesses with support for VAT calculations and tax-compliant invoicing.'
+                q: 'Does mando support Nigerian taxes?',
+                a: 'Yes. mando is built for Nigerian businesses with support for VAT calculations and tax-compliant invoicing.'
               }
             ].map((faq) => (
               <motion.div key={faq.q} variants={itemVariants} className="border-b pb-6">
@@ -468,7 +477,7 @@ export default function LandingPage() {
             Ready to take control of your business?
           </h2>
           <p className="text-lg text-emerald-50 mb-10">
-            Join thousands of Nigerian businesses using Mando to sell, invoice, and grow.
+            Join thousands of Nigerian businesses using mando to sell, invoice, and grow.
           </p>
           <Link 
             to="/register" 
@@ -489,7 +498,7 @@ export default function LandingPage() {
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600">
                   <span className="text-sm font-bold text-white">m</span>
                 </div>
-                <span className="text-xl font-bold">Mando</span>
+                <span className="text-xl font-bold">mando</span>
               </div>
               <p className="text-sm text-muted-foreground">
                 A lightweight operating system for Nigerian SMEs.
@@ -520,7 +529,7 @@ export default function LandingPage() {
             </div>
           </div>
           <div className="border-t pt-8 text-center text-sm text-muted-foreground">
-            <p>&copy; {new Date().getFullYear()} Mando. All rights reserved.</p>
+            <p>&copy; {new Date().getFullYear()} mando. All rights reserved.</p>
           </div>
         </div>
       </footer>

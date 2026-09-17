@@ -2,10 +2,11 @@ import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
-import { formatCurrency, formatDate } from '@/lib/utils';
+import { formatCurrency, formatDate, formatCompactCurrency } from '@/lib/utils';
 import NewExpenseModal from './NewExpenseModal';
 import Pagination, { usePagination } from '@/components/Pagination';
 import { Plus } from 'lucide-react';
+
 
 interface Expense {
   id: string;
@@ -54,11 +55,11 @@ export default function ExpenseListPage() {
       <div className="flex items-stretch gap-3 mb-4">
         <div className="rounded-lg border bg-card p-4 shadow-3d-sm w-64">
           <p className="text-sm text-muted-foreground">Total Expenses</p>
-          <p className="text-3xl sm:text-4xl font-bold font-mono">{formatCurrency(total)}</p>
+          <p className="text-3xl sm:text-4xl font-bold font-mono">{formatCompactCurrency(total)}</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
           <div className="flex items-center gap-1.5">
-            <label className="text-xs text-muted-foreground whitespace-nowrap">From</label>
+            <label className="text-xs text-muted-foreground whitespace-nowrap">Fr</label>
             <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="rounded-md border bg-background px-3 py-2 text-sm" />
           </div>
           <div className="flex items-center gap-1.5">

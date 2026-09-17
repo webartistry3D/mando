@@ -133,7 +133,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       {/* Desktop sidebar */}
       <aside className="hidden md:fixed md:inset-y-0 md:flex md:w-56 md:flex-col md:border-r md:bg-card">
         <div className="flex h-14 items-center px-4 border-b">
-          <span className="text-xl font-bold">Mando</span>
+          <span className="text-xl font-bold">mando</span>
         </div>
         <nav className="flex-1 overflow-y-auto p-2 space-y-0.5">
           {visibleNavItems.map((item) => (
@@ -170,7 +170,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <div className="md:pl-56">
         {/* Top bar */}
         <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b bg-background/95 backdrop-blur px-4">
-          <span className="text-lg font-bold md:hidden">Mando</span>
+          <span className="text-lg font-bold md:hidden">mando</span>
           <div className="hidden md:block" />
           <div className="flex items-center gap-2">
             <ThemeToggle />

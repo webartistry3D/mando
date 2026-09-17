@@ -1,4 +1,4 @@
-# Mando — Nigerian SME Operations
+# mando — Nigerian SME Operations
 
 Sell → Invoice → Get Paid → Track Expenses → Deliver → Know Your Numbers
 
@@ -74,4 +74,4 @@ All under `/api/v1/`:
 
 ## License
 
-Proprietary — Mando © 2026
+Proprietary — mando © 2026
