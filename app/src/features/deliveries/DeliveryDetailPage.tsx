@@ -4,6 +4,7 @@ import { api } from '@/lib/api';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { ArrowLeft } from 'lucide-react';
 import type { Delivery } from '@/types';
+import DeliveryMapView from './DeliveryMapView';
 
 const statusColors: Record<string, string> = {
   PENDING: 'bg-gray-100 text-gray-700',
@@ -42,8 +43,8 @@ export default function DeliveryDetailPage() {
   if (!delivery) return <div className="p-8 text-center text-muted-foreground">Loading...</div>;
 
   return (
-    <div className="mx-auto max-w-2xl p-4 space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="mx-auto max-w-5xl p-4 space-y-6">
+      <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate('/deliveries')}
@@ -64,7 +65,7 @@ export default function DeliveryDetailPage() {
             </p>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap justify-end">
           {nextActions[delivery.status]?.map((a) => (
             <button
               key={a.status}
@@ -77,30 +78,44 @@ export default function DeliveryDetailPage() {
         </div>
       </div>
 
-      <div className="rounded-lg border bg-card p-4 space-y-2 text-sm shadow-3d-sm">
-        {delivery.deliveryAddress && <p><span className="font-medium">Address:</span> {delivery.deliveryAddress}</p>}
-        {delivery.recipientName && <p><span className="font-medium">Recipient:</span> {delivery.recipientName} {delivery.recipientPhone && `(${delivery.recipientPhone})`}</p>}
-        {delivery.deliveryFee > 0 && <p><span className="font-medium">Delivery Fee:</span> <span className="font-mono">{formatCurrency(delivery.deliveryFee)}</span></p>}
-        {delivery.assignedPerson && <p><span className="font-medium">Assigned to:</span> {delivery.assignedPerson}</p>}
-        {delivery.trackingReference && <p><span className="font-medium">Tracking:</span> {delivery.trackingReference}</p>}
-        {delivery.invoice && <p><span className="font-medium">Invoice:</span> <Link to={`/invoices/${delivery.invoice.id}`} className="text-primary underline">{delivery.invoice.number}</Link></p>}
-        {delivery.deliveredAt && <p><span className="font-medium">Delivered:</span> {formatDate(delivery.deliveredAt)}</p>}
-        {delivery.recipientConfirmation && <p><span className="font-medium">Confirmation:</span> {delivery.recipientConfirmation}</p>}
-      </div>
-
-      {delivery.items && delivery.items.length > 0 && (
-        <div className="rounded-lg border bg-card overflow-hidden shadow-3d">
-          <div className="px-4 py-3 border-b bg-muted/50 font-semibold text-sm">Items</div>
-          <div className="divide-y">
-            {delivery.items.map((item, i) => (
-              <div key={i} className="px-4 py-3 flex justify-between text-sm">
-                <span>{item.description}</span>
-                <span className="font-medium">{item.quantity}x</span>
-              </div>
-            ))}
+      <div className="grid gap-6 lg:grid-cols-[30%_65%]">
+        <div className="space-y-6">
+          <div className="rounded-lg border bg-card p-4 space-y-2 text-sm shadow-3d-sm">
+            {delivery.deliveryAddress && <p><span className="font-medium">Address:</span> {delivery.deliveryAddress}</p>}
+            {delivery.recipientName && <p><span className="font-medium">Recipient:</span> {delivery.recipientName} {delivery.recipientPhone && `(${delivery.recipientPhone})`}</p>}
+            {delivery.deliveryFee > 0 && <p><span className="font-medium">Delivery Fee:</span> <span className="font-mono">{formatCurrency(delivery.deliveryFee)}</span></p>}
+            {delivery.assignedPerson && <p><span className="font-medium">Assigned to:</span> {delivery.assignedPerson}</p>}
+            {delivery.trackingReference && <p><span className="font-medium">Tracking:</span> {delivery.trackingReference}</p>}
+            {delivery.invoice && <p><span className="font-medium">Invoice:</span> <Link to={`/invoices/${delivery.invoice.id}`} className="text-primary underline">{delivery.invoice.number}</Link></p>}
+            {delivery.deliveredAt && <p><span className="font-medium">Delivered:</span> {formatDate(delivery.deliveredAt)}</p>}
+            {delivery.recipientConfirmation && <p><span className="font-medium">Confirmation:</span> {delivery.recipientConfirmation}</p>}
           </div>
+
+          {delivery.items && delivery.items.length > 0 && (
+            <div className="rounded-lg border bg-card overflow-hidden shadow-3d">
+              <div className="px-4 py-3 border-b bg-muted/50 font-semibold text-sm">Items</div>
+              <div className="divide-y">
+                {delivery.items.map((item, i) => (
+                  <div key={i} className="px-4 py-3 flex justify-between text-sm">
+                    <span>{item.description}</span>
+                    <span className="font-medium">{item.quantity}x</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
-      )}
+
+        <div>
+          {delivery.deliveryAddress && (
+            <DeliveryMapView
+              address={delivery.deliveryAddress}
+              label={delivery.recipientName || delivery.customer?.name || 'Delivery location'}
+              status={delivery.status}
+            />
+          )}
+        </div>
+      </div>
     </div>
   );
 }

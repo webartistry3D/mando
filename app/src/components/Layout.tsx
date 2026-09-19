@@ -7,7 +7,7 @@ import ThemeToggle from './ThemeToggle';
 import {
   LayoutDashboard, Users, Package, FileText,
   Receipt, Banknote, TrendingDown, Truck, BarChart3,
-  Settings, LogOut, Map, MoreHorizontal, Briefcase, X, Calculator,
+  Settings, LogOut, MoreHorizontal, Briefcase, X, Calculator,
 } from 'lucide-react';
 
 const navItems = [
