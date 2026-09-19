@@ -2,7 +2,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { formatCurrency, formatDate } from '@/lib/utils';
-import { generateEstimatePDF } from '@/lib/pdf';
+import { generateEstimatePDFBlob, generateEstimatePDF } from '@/lib/pdf';
+import { buildEstimateWhatsAppMessage } from '@/lib/whatsapp';
 import { ArrowLeft } from 'lucide-react';
 import type { Estimate, Business } from '@/types';
 
@@ -60,6 +61,15 @@ export default function EstimateDetailPage() {
   const displayDeliveryFee = Number(estimate.deliveryFee) || 0;
   const displayTotal = displaySubtotal - displayDiscount + displayTax + displayDeliveryFee;
 
+  const handleShareWhatsApp = () => {
+    if (!estimate || !business) return;
+    const pdfBlob = generateEstimatePDFBlob(estimate, business);
+    const pdfUrl = URL.createObjectURL(pdfBlob);
+    const shareUrl = `https://wa.me/${estimate.customer?.phone?.replace(/\D/g, '') || ''}?text=${encodeURIComponent(buildEstimateWhatsAppMessage(estimate, pdfUrl))}`;
+    window.open(shareUrl, '_blank', 'noopener,noreferrer');
+    setTimeout(() => URL.revokeObjectURL(pdfUrl), 2000);
+  };
+
   return (
     <div className="mx-auto max-w-5xl p-4 space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -92,14 +102,13 @@ export default function EstimateDetailPage() {
             >
               Download PDF
             </button>
-            <a
-              href={`https://wa.me/?text=${encodeURIComponent(`Estimate ${estimate.number}\nTotal: ₦${displayTotal.toLocaleString()}\n${estimate.customer?.name || ''}\n${estimate.expiryDate ? `Valid until ${formatDate(estimate.expiryDate)}` : ''}`)}`}
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              type="button"
+              onClick={handleShareWhatsApp}
               className="rounded-md border border-green-300 bg-green-50 px-3 py-2 text-sm font-medium text-green-700 w-full text-center"
             >
               WhatsApp
-            </a>
+            </button>
           </div>
           {isDraft && (
             <button onClick={() => updateStatus.mutate('SENT')} className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white w-full sm:w-auto">

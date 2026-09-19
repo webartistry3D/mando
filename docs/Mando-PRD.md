@@ -1,4 +1,4 @@
-Mando - A Nigerian SME Business Operations PWA
+mando - A Nigerian SME Business Operations PWA
 Agent-Executable MVP PRD v1.0
 Status: Build-ready
 Priority: MVP

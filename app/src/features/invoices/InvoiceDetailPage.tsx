@@ -4,7 +4,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import { api } from '@/lib/api';
 import { formatCurrency, formatDate } from '@/lib/utils';
-import { generateInvoicePDF } from '@/lib/pdf';
+import { generateInvoicePDFBlob, generateInvoicePDF } from '@/lib/pdf';
+import { buildInvoiceWhatsAppMessage } from '@/lib/whatsapp';
 import { ArrowLeft } from 'lucide-react';
 import type { Invoice, Business } from '@/types';
 
@@ -69,6 +70,15 @@ export default function InvoiceDetailPage() {
   const displayTax = Number(invoice.tax) > 0 ? Number(invoice.tax) : itemTax;
   const displayTotal = displaySubtotal - displayDiscount + displayTax + deliveryFee;
 
+  const handleShareWhatsApp = () => {
+    if (!invoice || !business) return;
+    const pdfBlob = generateInvoicePDFBlob(invoice, business);
+    const pdfUrl = URL.createObjectURL(pdfBlob);
+    const shareUrl = `https://wa.me/${invoice.customer?.phone?.replace(/\D/g, '') || ''}?text=${encodeURIComponent(buildInvoiceWhatsAppMessage(invoice, pdfUrl))}`;
+    window.open(shareUrl, '_blank', 'noopener,noreferrer');
+    setTimeout(() => URL.revokeObjectURL(pdfUrl), 2000);
+  };
+
   return (
     <div className="mx-auto max-w-5xl p-4 space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -101,14 +111,13 @@ export default function InvoiceDetailPage() {
             >
               Download PDF
             </button>
-            <a
-              href={`https://wa.me/${invoice.customer?.phone?.replace(/\D/g, '') || ''}?text=${encodeURIComponent(`Invoice ${invoice.number}\nTotal: ₦${displayTotal.toLocaleString()}\nBalance: ₦${Math.max(0, displayTotal - Number(invoice.amountPaid)).toLocaleString()}${invoice.dueDate ? `\nDue: ${formatDate(invoice.dueDate)}` : ''}\n${invoice.paymentInstructions || ''}`)}`}
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              type="button"
+              onClick={handleShareWhatsApp}
               className="rounded-md border border-green-300 bg-green-50 px-3 py-2 text-sm font-medium text-green-700 w-full text-center"
             >
               WhatsApp
-            </a>
+            </button>
           </div>
           {isDraft && (
             <button onClick={() => issue.mutate()} className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white w-full sm:w-auto">

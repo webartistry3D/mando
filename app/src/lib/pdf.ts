@@ -196,7 +196,7 @@ function drawNotes(doc: jsPDF, notes: string | null | undefined, terms: string |
   return y;
 }
 
-export function generateEstimatePDF(estimate: Estimate, business: Business) {
+function buildEstimateDoc(estimate: Estimate, business: Business) {
   const doc = new jsPDF();
 
   drawBusinessHeader(doc, business);
@@ -220,10 +220,18 @@ export function generateEstimatePDF(estimate: Estimate, business: Business) {
   doc.text('Thank you for your business.', 105, 285, { align: 'center' });
   doc.setTextColor(0, 0, 0);
 
-  doc.save(`${estimate.number}.pdf`);
+  return doc;
 }
 
-export function generateInvoicePDF(invoice: Invoice, business: Business) {
+export function generateEstimatePDFBlob(estimate: Estimate, business: Business): Blob {
+  return buildEstimateDoc(estimate, business).output('blob');
+}
+
+export function generateEstimatePDF(estimate: Estimate, business: Business) {
+  buildEstimateDoc(estimate, business).save(`${estimate.number}.pdf`);
+}
+
+function buildInvoiceDoc(invoice: Invoice, business: Business) {
   const doc = new jsPDF();
 
   drawBusinessHeader(doc, business);
@@ -238,7 +246,8 @@ export function generateInvoicePDF(invoice: Invoice, business: Business) {
 
   let y = drawCustomerBlock(doc, invoice.customer as any, 72);
   y = drawItemsTable(doc, invoice.items || [], y);
-  y = drawTotals(doc, invoice.items || [], y);
+  const deliveryFee = invoice.deliveries?.reduce((sum, d) => sum + Number(d.deliveryFee), 0) || 0;
+  y = drawTotals(doc, invoice.items || [], y, deliveryFee);
 
   // Payment summary
   y += 8;
@@ -274,5 +283,13 @@ export function generateInvoicePDF(invoice: Invoice, business: Business) {
   doc.text('Thank you for your business.', 105, 285, { align: 'center' });
   doc.setTextColor(0, 0, 0);
 
-  doc.save(`${invoice.number}.pdf`);
+  return doc;
+}
+
+export function generateInvoicePDFBlob(invoice: Invoice, business: Business): Blob {
+  return buildInvoiceDoc(invoice, business).output('blob');
+}
+
+export function generateInvoicePDF(invoice: Invoice, business: Business) {
+  buildInvoiceDoc(invoice, business).save(`${invoice.number}.pdf`);
 }
