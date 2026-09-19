@@ -18,7 +18,7 @@ const navItems = [
   { to: '/invoices', label: 'Invoices', icon: Receipt },
   { to: '/payments', label: 'Payments', icon: Banknote },
   { to: '/expenses', label: 'Expenses', icon: TrendingDown },
-  { to: '/deliveries', label: 'Deliveries', icon: Truck },
+  { to: '/dispatch', label: 'Deliveries', icon: Truck },
   { to: '/tax', label: 'Tax', icon: Calculator },
   { to: '/reports', label: 'Reports', icon: BarChart3 },
 ];
@@ -59,13 +59,10 @@ const bottomGroups: BottomGroup[] = [
     ],
   },
   {
-    key: 'map',
-    label: 'Map',
-    icon: Map,
-    children: [
-      { to: '/deliveries', label: 'Deliveries', icon: Truck },
-      { to: '/dispatch', label: 'Dispatch Tracker', icon: Map, disabled: true },
-    ],
+    key: 'dispatch',
+    label: 'Deliveries  ',
+    icon: Truck,
+    to: '/dispatch',
   },
   {
     key: 'more',
