@@ -4,16 +4,17 @@ function formatMoney(value: number): string {
   return `₦${Number(value || 0).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
+//function formatItemRows(items: Array<{ description: string; quantity: number; unitPrice: number; discount: number; tax: number; lineTotal?: number }>) {
 function formatItemRows(items: Array<{ description: string; quantity: number; unitPrice: number; discount: number; tax: number; lineTotal?: number }>) {
   if (!items?.length) return 'Items: None';
 
   return items
     .map((item) => {
-      const subtotal = Number(item.quantity) * Number(item.unitPrice);
-      const lineDiscount = Number(item.discount || 0);
-      const lineTax = Number(item.tax || 0);
-      const lineTotal = Number(item.lineTotal ?? subtotal - lineDiscount + lineTax);
-      return `- ${item.description} x${item.quantity} | ${formatMoney(subtotal)} | Subtotal: ${formatMoney(subtotal)} | Discount: ${formatMoney(lineDiscount)} | Tax: ${formatMoney(lineTax)} | Total: ${formatMoney(lineTotal)}`;
+      //const subtotal = Number(item.quantity) * Number(item.unitPrice);
+      //const lineDiscount = Number(item.discount || 0);
+      //const lineTax = Number(item.tax || 0);
+      //const lineTotal = Number(item.lineTotal ?? subtotal - lineDiscount + lineTax);
+      return `- ${item.description} x${item.quantity}`;
     })
     .join('\n');
 }
@@ -67,6 +68,6 @@ export function buildInvoiceWhatsAppMessage(invoice: Invoice, pdfUrl: string) {
     `Total: ${formatMoney(total)}`,
     `Balance Due: ${formatMoney(balanceDue)}`,
     '',
-    'PDF: ' + pdfUrl,
+    //'PDF: ' + pdfUrl,
   ].join('\n');
 }
