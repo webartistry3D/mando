@@ -1,12 +1,10 @@
 import { useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import type { Delivery } from '@/types';
-import NewDeliveryModal from './NewDeliveryModal';
 import Pagination, { usePagination } from '@/components/Pagination';
-import { Plus } from 'lucide-react';
 
 const statusColors: Record<string, string> = {
   PENDING: 'bg-gray-100 text-gray-700',
@@ -19,9 +17,7 @@ const statusColors: Record<string, string> = {
 
 export default function DeliveryListPage() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const [status, setStatus] = useState('');
-  const [modalOpen, setModalOpen] = useState(searchParams.get('new') === '1');
 
   const { data: deliveries = [] } = useQuery({
     queryKey: ['deliveries', status],
@@ -34,12 +30,6 @@ export default function DeliveryListPage() {
     <div className="mx-auto max-w-5xl p-4">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Deliveries</h1>
-        <button
-          onClick={() => setModalOpen(true)}
-          className="flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
-        >
-          <Plus className="h-4 w-4" /> New
-        </button>
       </div>
 
       <div className="flex gap-2 mb-4 overflow-x-auto">
@@ -91,7 +81,6 @@ export default function DeliveryListPage() {
         <Pagination page={page} totalPages={totalPages} totalItems={deliveries.length} setPage={setPage} />
       </div>
 
-      <NewDeliveryModal open={modalOpen} onClose={() => setModalOpen(false)} />
     </div>
   );
 }

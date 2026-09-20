@@ -246,7 +246,7 @@ function buildInvoiceDoc(invoice: Invoice, business: Business) {
 
   let y = drawCustomerBlock(doc, invoice.customer as any, 72);
   y = drawItemsTable(doc, invoice.items || [], y);
-  const deliveryFee = invoice.deliveries?.reduce((sum, d) => sum + Number(d.deliveryFee), 0) || 0;
+  const deliveryFee = Number(invoice.deliveryFee) || 0;
   y = drawTotals(doc, invoice.items || [], y, deliveryFee);
 
   // Payment summary

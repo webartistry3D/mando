@@ -71,12 +71,6 @@ export default function DispatchTrackerPage() {
           <h1 className="text-2xl font-bold">Deliveries</h1>
           {/*<p className="text-sm text-muted-foreground">Track active and completed deliveries across the operation.</p>  */}
         </div>
-        <button
-          onClick={() => navigate('/deliveries?new=1')}
-          className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
-        >
-          + New
-        </button>
       </div>
 
       <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">

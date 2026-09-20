@@ -56,13 +56,16 @@ router.post('/', asyncHandler(async (req, res) => {
   const input = createDeliverySchema.parse(req.body);
   const businessId = req.user!.businessId!;
 
-  // Verify invoice if provided
-  if (input.invoiceId) {
-    const invoice = await prisma.invoice.findFirst({
-      where: { id: input.invoiceId, businessId },
-    });
-    if (!invoice) return notFound(res, 'Invoice');
+  // Delivery creation is intentionally disabled for standalone delivery fees.
+  // All invoice delivery charges are sourced from accepted estimate conversions.
+  if (!input.invoiceId) {
+    return error(res, 'FORBIDDEN', 'New delivery records are disabled. Use an estimate conversion to add delivery fees to an invoice.', 400);
   }
+
+  const invoice = await prisma.invoice.findFirst({
+    where: { id: input.invoiceId, businessId },
+  });
+  if (!invoice) return notFound(res, 'Invoice');
 
   // Verify customer if provided
   if (input.customerId) {
@@ -83,7 +86,7 @@ router.post('/', asyncHandler(async (req, res) => {
       deliveryAddress: input.deliveryAddress,
       recipientName: input.recipientName,
       recipientPhone: input.recipientPhone,
-      deliveryFee: input.deliveryFee || 0,
+      deliveryFee: 0,
       assignedPerson: input.assignedPerson,
       trackingReference: input.trackingReference,
       status: 'PENDING',
@@ -145,7 +148,7 @@ router.patch('/:id', asyncHandler(async (req, res) => {
       ...(input.deliveryAddress !== undefined ? { deliveryAddress: input.deliveryAddress } : {}),
       ...(input.recipientName !== undefined ? { recipientName: input.recipientName } : {}),
       ...(input.recipientPhone !== undefined ? { recipientPhone: input.recipientPhone } : {}),
-      ...(input.deliveryFee !== undefined ? { deliveryFee: input.deliveryFee } : {}),
+      ...(input.deliveryFee !== undefined ? { deliveryFee: 0 } : {}),
       ...(input.assignedPerson !== undefined ? { assignedPerson: input.assignedPerson } : {}),
       ...(input.trackingReference !== undefined ? { trackingReference: input.trackingReference } : {}),
       ...(input.notes !== undefined ? { notes: input.notes } : {}),

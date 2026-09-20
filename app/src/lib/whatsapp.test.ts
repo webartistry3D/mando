@@ -46,6 +46,7 @@ describe('WhatsApp message builders', () => {
       subtotal: 5000,
       discount: 200,
       tax: 250,
+      deliveryFee: 300,
       total: 5350,
       amountPaid: 2000,
       balanceDue: 3350,

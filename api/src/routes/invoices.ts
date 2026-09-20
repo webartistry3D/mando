@@ -44,7 +44,7 @@ export async function recalcInvoiceTotals(invoiceId: string) {
     include: { items: true, payments: true, deliveries: { select: { deliveryFee: true } } },
   });
   if (!invoice) return;
-  const deliveryFee = invoice.deliveries.reduce((s, d) => s + Number(d.deliveryFee), 0);
+  const deliveryFee = Number(invoice.deliveryFee || 0);
   const { subtotal, discount, tax, total } = calcTotals(
     invoice.items.map((i) => ({
       quantity: i.quantity,
@@ -123,6 +123,7 @@ router.post('/', asyncHandler(async (req, res) => {
       subtotal,
       discount,
       tax,
+      deliveryFee: 0,
       total,
       amountPaid: 0,
       balanceDue: total,
@@ -204,7 +205,8 @@ router.patch('/:id', asyncHandler(async (req, res) => {
     where: { invoiceId: invoice.id },
     select: { deliveryFee: true },
   });
-  const deliveryFee = linkedDeliveries.reduce((s, d) => s + Number(d.deliveryFee), 0);
+  const deliveryFee = Number(invoice.deliveryFee || 0);
+  void linkedDeliveries;
 
   const { subtotal, discount, tax, total } = calcTotals(
     items.map((i) => ({
@@ -245,6 +247,7 @@ router.patch('/:id', asyncHandler(async (req, res) => {
         discount,
         tax,
         total,
+        ...(invoice.deliveryFee !== undefined ? { deliveryFee: invoice.deliveryFee } : {}),
         ...(input.notes !== undefined ? { notes: input.notes } : {}),
         ...(input.paymentInstructions !== undefined ? { paymentInstructions: input.paymentInstructions } : {}),
         ...(input.status ? { status: input.status } : {}),

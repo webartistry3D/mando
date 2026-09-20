@@ -48,7 +48,7 @@ export function buildInvoiceWhatsAppMessage(invoice: Invoice, pdfUrl: string) {
   const subtotal = Number(invoice.subtotal ?? grossSubtotal);
   const discount = Number(invoice.discount ?? invoice.items?.reduce((sum, item) => sum + Number(item.discount), 0) ?? 0);
   const tax = Number(invoice.tax ?? invoice.items?.reduce((sum, item) => sum + Number(item.tax), 0) ?? 0);
-  const deliveryFee = invoice.deliveries?.reduce((sum, d) => sum + Number(d.deliveryFee), 0) || 0;
+  const deliveryFee = Number(invoice.deliveryFee) || 0;
   const total = Number(invoice.total ?? subtotal - discount + tax + deliveryFee);
   const balanceDue = Number(invoice.balanceDue ?? Math.max(0, total - Number(invoice.amountPaid || 0)));
 

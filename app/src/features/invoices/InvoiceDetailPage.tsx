@@ -64,7 +64,7 @@ export default function InvoiceDetailPage() {
   const grossSubtotal = invoice.items?.reduce((s, i) => s + Number(i.quantity) * Number(i.unitPrice), 0) || 0;
   const itemDiscount = invoice.items?.reduce((s, i) => s + Number(i.discount), 0) || 0;
   const itemTax = invoice.items?.reduce((s, i) => s + Number(i.tax), 0) || 0;
-  const deliveryFee = invoice.deliveries?.reduce((s, d) => s + Number(d.deliveryFee), 0) || 0;
+  const deliveryFee = Number(invoice.deliveryFee) || 0;
   const displaySubtotal = Number(invoice.subtotal) || grossSubtotal;
   const displayDiscount = Number(invoice.discount) > 0 ? Number(invoice.discount) : itemDiscount;
   const displayTax = Number(invoice.tax) > 0 ? Number(invoice.tax) : itemTax;

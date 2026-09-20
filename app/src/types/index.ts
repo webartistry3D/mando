@@ -152,6 +152,7 @@ export interface Invoice {
   subtotal: number;
   discount: number;
   tax: number;
+  deliveryFee: number;
   taxRemitted?: number;
   taxRemittedAt?: string | null;
   total: number;

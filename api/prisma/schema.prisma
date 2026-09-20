@@ -245,6 +245,7 @@ model Invoice {
   subtotal           Decimal  @default(0) @db.Decimal(12, 2)
   discount           Decimal  @default(0) @db.Decimal(12, 2)
   tax                Decimal  @default(0) @db.Decimal(12, 2)
+  deliveryFee        Decimal  @default(0) @db.Decimal(12, 2)
   taxRemitted         Decimal  @default(0) @db.Decimal(12, 2)
   taxRemittedAt       DateTime?
   total              Decimal  @default(0) @db.Decimal(12, 2)

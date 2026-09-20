@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { formatCurrency } from '@/lib/utils';
-import { FileText, Receipt, Banknote, Truck, Plus } from 'lucide-react';
+import { FileText, Receipt, Banknote, Plus } from 'lucide-react';
 
 interface SalesOverview {
   recentEstimates: Array<{ id: string; number: string; status: string; total: number; createdAt: string; customer?: { name: string } | null }>;
@@ -30,7 +30,6 @@ export default function SalesOverviewPage() {
           { to: '/estimates/new', icon: FileText, label: 'New Estimate', accent: 'text-violet-600 bg-violet-500/10' },
           { to: '/invoices/new', icon: Receipt, label: 'New Invoice', accent: 'text-blue-600 bg-blue-500/10' },
           { to: '/payments', icon: Banknote, label: 'Record Payment', accent: 'text-emerald-600 bg-emerald-500/10' },
-          { to: '/deliveries?new=1', icon: Truck, label: 'New Delivery', accent: 'text-amber-600 bg-amber-500/10' },
         ].map(({ to, icon: Icon, label, accent }) => (
           <Link key={label} to={to} className="group flex flex-col items-center gap-2 rounded-xl border bg-card p-4 transition-all hover:shadow-md hover:-translate-y-0.5">
             <span className={`relative rounded-lg p-2 ${accent}`}>
