@@ -68,6 +68,6 @@ export function buildInvoiceWhatsAppMessage(invoice: Invoice, pdfUrl: string) {
     `Total: ${formatMoney(total)}`,
     `Balance Due: ${formatMoney(balanceDue)}`,
     '',
-    //'PDF: ' + pdfUrl,
+    'PDF: ' + pdfUrl,
   ].join('\n');
 }
