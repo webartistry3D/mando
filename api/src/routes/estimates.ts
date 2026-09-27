@@ -286,6 +286,38 @@ router.post('/:id/convert', asyncHandler(async (req, res) => {
     include: { customer: true, items: true },
   });
 
+  // Create delivery record if there's a delivery fee
+  if (deliveryFee > 0) {
+    const deliverySettings = await prisma.businessSettings.findUnique({ where: { businessId } });
+    const deliveryPrefix = deliverySettings?.deliveryPrefix || 'DEL';
+    const lastDelivery = await prisma.delivery.findFirst({
+      where: { businessId },
+      orderBy: { createdAt: 'desc' },
+      select: { number: true },
+    });
+    const deliverySeq = lastDelivery ? parseInt(lastDelivery.number.replace(/\D/g, ''), 10) + 1 : 1;
+    const deliveryNumber = `${deliveryPrefix}-${String(deliverySeq).padStart(3, '0')}`;
+
+    await prisma.delivery.create({
+      data: {
+        businessId,
+        invoiceId: invoice.id,
+        customerId: estimate.customerId,
+        number: deliveryNumber,
+        deliveryFee,
+        status: 'PENDING',
+        createdById: req.user!.userId,
+        items: {
+          create: estimate.items.map((item) => ({
+            productId: item.productId,
+            description: item.description,
+            quantity: item.quantity,
+          })),
+        },
+      },
+    });
+  }
+
   // Mark estimate as converted
   await prisma.estimate.update({
     where: { id: estimate.id },

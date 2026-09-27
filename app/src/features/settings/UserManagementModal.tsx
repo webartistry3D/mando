@@ -6,7 +6,7 @@ import { X } from 'lucide-react';
 
 interface Member {
   id: string;
-  role: 'OWNER' | 'MANAGER' | 'STAFF';
+  role: 'OWNER' | 'MANAGER' | 'STAFF' | 'DISPATCH';
   user: { id: string; name: string; email: string; phone: string | null };
 }
 
@@ -20,8 +20,10 @@ export default function UserManagementModal({ open, onClose }: Props) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState<'MANAGER' | 'STAFF'>('STAFF');
+  const [role, setRole] = useState<'MANAGER' | 'STAFF' | 'DISPATCH'>('STAFF');
   const [msg, setMsg] = useState('');
+  const [credentialMemberId, setCredentialMemberId] = useState<string | null>(null);
+  const [newPassword, setNewPassword] = useState('');
 
   const { data: members = [] } = useQuery({
     queryKey: ['members'],
@@ -61,13 +63,34 @@ export default function UserManagementModal({ open, onClose }: Props) {
     onError: (err) => setMsg(err instanceof Error ? err.message : 'Remove failed'),
   });
 
+  const updateCredentials = useMutation({
+    mutationFn: ({ id, password }: { id: string; password: string }) =>
+      api.patch(`/business/members/${id}/credentials`, { password }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['members'] });
+      setMsg('Credentials updated');
+      setNewPassword('');
+      setCredentialMemberId(null);
+    },
+    onError: (err) => setMsg(err instanceof Error ? err.message : 'Update failed'),
+  });
+
   function handleCreate(e: FormEvent) {
     e.preventDefault();
     create.mutate({ name, email, password, role });
   }
 
+  function handleUpdateCredentials(e: FormEvent) {
+    e.preventDefault();
+    if (credentialMemberId) {
+      updateCredentials.mutate({ id: credentialMemberId, password: newPassword });
+    }
+  }
+
   function handleClose() {
     setMsg('');
+    setCredentialMemberId(null);
+    setNewPassword('');
     onClose();
   }
 
@@ -152,11 +175,12 @@ export default function UserManagementModal({ open, onClose }: Props) {
                     />
                     <select
                       value={role}
-                      onChange={(e) => setRole(e.target.value as 'MANAGER' | 'STAFF')}
+                      onChange={(e) => setRole(e.target.value as 'MANAGER' | 'STAFF' | 'DISPATCH')}
                       className="rounded-md border bg-background px-3 py-2 text-sm"
                     >
                       <option value="STAFF">Staff</option>
                       <option value="MANAGER">Manager</option>
+                      <option value="DISPATCH">Dispatch</option>
                     </select>
                   </div>
                   <motion.button
@@ -191,7 +215,16 @@ export default function UserManagementModal({ open, onClose }: Props) {
                             <option value="OWNER">Owner</option>
                             <option value="MANAGER">Manager</option>
                             <option value="STAFF">Staff</option>
+                            <option value="DISPATCH">Dispatch</option>
                           </select>
+                          {m.role === 'DISPATCH' && (
+                            <button
+                              onClick={() => setCredentialMemberId(m.id)}
+                              className="rounded-md bg-primary/10 px-3 py-1 text-sm text-primary hover:bg-primary/20"
+                            >
+                              Set Password
+                            </button>
+                          )}
                           {m.role !== 'OWNER' && (
                             <button
                               onClick={() => removeMember.mutate(m.id)}
@@ -210,6 +243,56 @@ export default function UserManagementModal({ open, onClose }: Props) {
                     )}
                   </div>
                 </div>
+
+                {/* Update dispatch user credentials */}
+                <AnimatePresence>
+                  {credentialMemberId && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="rounded-lg border bg-card p-4 space-y-3"
+                    >
+                      <div className="flex items-center justify-between">
+                        <h3 className="font-semibold">Update Dispatch User Password</h3>
+                        <button
+                          onClick={() => { setCredentialMemberId(null); setNewPassword(''); }}
+                          className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                      <form onSubmit={handleUpdateCredentials} className="space-y-3">
+                        <input
+                          type="password"
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                          required
+                          minLength={6}
+                          placeholder="New password (min 6 characters)"
+                          className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+                        />
+                        <div className="flex gap-2">
+                          <motion.button
+                            whileTap={{ scale: 0.98 }}
+                            type="submit"
+                            disabled={updateCredentials.isPending}
+                            className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
+                          >
+                            {updateCredentials.isPending ? 'Updating...' : 'Update Password'}
+                          </motion.button>
+                          <button
+                            type="button"
+                            onClick={() => { setCredentialMemberId(null); setNewPassword(''); }}
+                            className="rounded-md border px-4 py-2 text-sm font-medium hover:bg-accent"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </form>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </motion.div>
             </div>
           </motion.div>

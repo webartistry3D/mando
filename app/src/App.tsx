@@ -5,6 +5,7 @@ import LoginPage from '@/features/auth/LoginPage';
 import RegisterPage from '@/features/auth/RegisterPage';
 import GoogleAuthSuccessPage from '@/features/auth/GoogleAuthSuccessPage';
 import SettingsPage from '@/features/settings/SettingsPage';
+import DispatchSettingsPage from '@/features/settings/DispatchSettingsPage';
 import CustomerListPage from '@/features/customers/CustomerListPage';
 import CustomerDetailPage from '@/features/customers/CustomerDetailPage';
 import ProductListPage from '@/features/products/ProductListPage';
@@ -53,12 +54,13 @@ export default function App() {
         <Route path="/payments" element={<ProtectedRoute><Layout><PaymentListPage /></Layout></ProtectedRoute>} />
         <Route path="/payments/:id" element={<ProtectedRoute><Layout><PaymentDetailPage /></Layout></ProtectedRoute>} />
         <Route path="/expenses" element={<ProtectedRoute><Layout><ExpenseListPage /></Layout></ProtectedRoute>} />
-        <Route path="/deliveries" element={<ProtectedRoute><Layout><DeliveryListPage /></Layout></ProtectedRoute>} />
-        <Route path="/deliveries/:id" element={<ProtectedRoute><Layout><DeliveryDetailPage /></Layout></ProtectedRoute>} />
+        <Route path="/deliveries" element={<ProtectedRoute allowedRoles={['OWNER', 'MANAGER', 'STAFF', 'DISPATCH']}><Layout><DeliveryListPage /></Layout></ProtectedRoute>} />
+        <Route path="/deliveries/:id" element={<ProtectedRoute allowedRoles={['OWNER', 'MANAGER', 'STAFF', 'DISPATCH']}><Layout><DeliveryDetailPage /></Layout></ProtectedRoute>} />
         <Route path="/dispatch" element={<ProtectedRoute><Layout><DispatchTrackerPage /></Layout></ProtectedRoute>} />
         <Route path="/tax" element={<ProtectedRoute allowedRoles={['OWNER', 'MANAGER']}><Layout><TaxPage /></Layout></ProtectedRoute>} />
         <Route path="/reports" element={<ProtectedRoute allowedRoles={['OWNER', 'MANAGER']}><Layout><ReportsPage /></Layout></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute allowedRoles={['OWNER', 'MANAGER']}><Layout><SettingsPage /></Layout></ProtectedRoute>} />
+        <Route path="/dispatch-settings" element={<ProtectedRoute allowedRoles={['DISPATCH']}><Layout><DispatchSettingsPage /></Layout></ProtectedRoute>} />
       </Routes>
     </BrowserRouter>
   );

@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
 import NotificationBell from './NotificationBell';
 import ThemeToggle from './ThemeToggle';
+import DispatchPasswordModal from '@/features/settings/DispatchPasswordModal';
 import {
   LayoutDashboard, Users, Package, FileText,
   Receipt, Banknote, TrendingDown, Truck, BarChart3,
@@ -18,7 +19,7 @@ const navItems = [
   { to: '/invoices', label: 'Invoices', icon: Receipt },
   { to: '/payments', label: 'Payments', icon: Banknote },
   { to: '/expenses', label: 'Expenses', icon: TrendingDown },
-  { to: '/dispatch', label: 'Deliveries', icon: Truck },
+  { to: '/deliveries', label: 'Deliveries', icon: Truck },
   { to: '/tax', label: 'Tax', icon: Calculator },
   { to: '/reports', label: 'Reports', icon: BarChart3 },
 ];
@@ -28,6 +29,7 @@ interface BottomGroup {
   label: string;
   icon: React.ComponentType<{ className?: string }>;
   to?: string;
+  action?: 'logout';
   children?: { to?: string; label: string; icon: React.ComponentType<{ className?: string }>; disabled?: boolean; action?: 'logout' }[];
 }
 
@@ -62,7 +64,7 @@ const bottomGroups: BottomGroup[] = [
     key: 'dispatch',
     label: 'Deliveries  ',
     icon: Truck,
-    to: '/dispatch',
+    to: '/deliveries',
   },
   {
     key: 'more',
@@ -84,19 +86,44 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [openGroup, setOpenGroup] = useState<string | null>(null);
   const [closing, setClosing] = useState(false);
   const [showLogout, setShowLogout] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
 
   const isStaff = user?.role === 'STAFF';
+  const isDispatch = user?.role === 'DISPATCH';
   const staffHidden = ['/dashboard', '/reports', '/tax'];
-  const visibleNavItems = isStaff ? navItems.filter((item) => !staffHidden.includes(item.to)) : navItems;
-  const visibleBottomGroups = isStaff
-    ? bottomGroups
-        .filter((g) => g.key !== 'dashboard')
-        .map((g) =>
-          g.key === 'more'
-            ? { ...g, children: g.children?.filter((c) => c.action === 'logout') }
-            : g,
-        )
-    : bottomGroups;
+  const dispatchAllowed = ['/deliveries', '/dispatch'];
+  
+  let visibleNavItems = navItems;
+  let visibleBottomGroups = bottomGroups;
+
+  if (isDispatch) {
+    // Dispatch users can only see deliveries + settings (password) + logout
+    visibleNavItems = navItems.filter((item) => dispatchAllowed.includes(item.to));
+    visibleBottomGroups = [
+      bottomGroups.find((g) => g.key === 'dispatch')!,
+      {
+        key: 'settings',
+        label: 'Settings',
+        icon: Settings,
+      },
+      {
+        key: 'logout',
+        label: 'Logout',
+        icon: LogOut,
+        action: 'logout' as const,
+      },
+    ];
+  } else if (isStaff) {
+    // Staff cannot see dashboard, reports, tax
+    visibleNavItems = navItems.filter((item) => !staffHidden.includes(item.to));
+    visibleBottomGroups = bottomGroups
+      .filter((g) => g.key !== 'dashboard')
+      .map((g) =>
+        g.key === 'more'
+          ? { ...g, children: g.children?.filter((c) => c.action === 'logout') }
+          : g,
+      );
+  }
 
   function closeTray() {
     setClosing(true);
@@ -106,8 +133,16 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     }, 200);
   }
 
-  function handleGroupClick(key: string, to?: string) {
+  function handleGroupClick(key: string, to?: string, action?: 'logout') {
+    if (action === 'logout') {
+      setShowLogout(true);
+      return;
+    }
     if (to) {
+      if (isDispatch && key === 'settings') {
+        setShowPasswordModal(true);
+        return;
+      }
       navigate(to);
       return;
     }
@@ -123,6 +158,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     const path = location.pathname;
     if (group.to === path) return true;
     return group.children?.some((c) => c.to && (path === c.to || (c.to !== '/' && path.startsWith(c.to + '/')))) ?? false;
+  }
+
+  function isDispatchGroupActive(key: string): boolean {
+    if (key === 'settings') return location.pathname === '/settings';
+    return false;
   }
 
   return (
@@ -149,7 +189,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           ))}
         </nav>
         <div className="border-t p-3">
-          {!isStaff && (
+          {!isStaff && !isDispatch && (
             <NavLink to="/settings" className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium hover:bg-accent">
               <Settings className="h-4 w-4" /> Settings
             </NavLink>
@@ -278,9 +318,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           {visibleBottomGroups.map((group) => (
             <button
               key={group.key}
-              onClick={() => handleGroupClick(group.key, group.to)}
+              onClick={() => handleGroupClick(group.key, group.to, group.action)}
               className={`flex-1 flex flex-col items-center gap-1 py-2 text-xs font-medium transition-colors ${
-                openGroup === group.key || isGroupActive(group) ? 'text-primary' : 'text-muted-foreground'
+                openGroup === group.key || isGroupActive(group) || (isDispatch && isDispatchGroupActive(group.key)) ? 'text-primary' : 'text-muted-foreground'
               }`}
             >
               <group.icon className="h-6 w-6" />
@@ -289,6 +329,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           ))}
         </div>
       </nav>
+
+      <DispatchPasswordModal open={showPasswordModal} onClose={() => setShowPasswordModal(false)} />
     </div>
   );
 }

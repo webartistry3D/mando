@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { prisma } from '../lib/prisma.js';
-import { authRequired, loadBusinessContext } from '../middleware/auth.js';
+import { authRequired, loadBusinessContext, requireRole } from '../middleware/auth.js';
 import { success, error, notFound, asyncHandler } from '../lib/response.js';
 import { createDeliverySchema, updateDeliverySchema } from '../validators/delivery.js';
 import { recalcInvoiceTotals } from './invoices.js';
@@ -36,6 +36,16 @@ router.get('/', asyncHandler(async (req, res) => {
   const { status, customerId } = req.query;
   const where: Record<string, unknown> = { businessId: req.user!.businessId! };
 
+  // Dispatch users can only see deliveries assigned to them
+  if (req.user!.role === 'DISPATCH') {
+    const member = await prisma.businessMember.findFirst({
+      where: { userId: req.user!.userId, businessId: req.user!.businessId! },
+    });
+    if (member) {
+      where.dispatchedToId = member.id;
+    }
+  }
+
   if (status && typeof status === 'string') where.status = status;
   if (customerId && typeof customerId === 'string') where.customerId = customerId;
 
@@ -44,6 +54,7 @@ router.get('/', asyncHandler(async (req, res) => {
     include: {
       customer: { select: { id: true, name: true, phone: true } },
       invoice: { select: { id: true, number: true, total: true } },
+      dispatchedTo: { include: { user: { select: { id: true, name: true, email: true } } } },
       items: { include: { product: { select: { id: true, name: true, sku: true } } } },
     },
     orderBy: { createdAt: 'desc' },
@@ -75,6 +86,21 @@ router.post('/', asyncHandler(async (req, res) => {
     if (!customer) return notFound(res, 'Customer');
   }
 
+  // Verify dispatchedTo if provided (only OWNER/MANAGER can assign)
+  let dispatchedToId = null;
+  if (input.dispatchedToId) {
+    if (req.user!.role === 'DISPATCH') {
+      return error(res, 'FORBIDDEN', 'Dispatch users cannot assign deliveries', 403);
+    }
+    const assignee = await prisma.businessMember.findFirst({
+      where: { id: input.dispatchedToId, businessId, role: 'DISPATCH' },
+    });
+    if (!assignee) {
+      return error(res, 'INVALID_ASSIGNEE', 'Invalid dispatch user', 400);
+    }
+    dispatchedToId = input.dispatchedToId;
+  }
+
   const number = await nextDeliveryNumber(businessId);
 
   const delivery = await prisma.delivery.create({
@@ -92,6 +118,7 @@ router.post('/', asyncHandler(async (req, res) => {
       status: 'PENDING',
       notes: input.notes,
       createdById: req.user!.userId,
+      dispatchedToId,
       ...(input.items && input.items.length > 0 ? {
         items: {
           create: input.items.map((item) => ({
@@ -105,6 +132,7 @@ router.post('/', asyncHandler(async (req, res) => {
     include: {
       customer: { select: { id: true, name: true, phone: true } },
       invoice: { select: { id: true, number: true } },
+      dispatchedTo: { include: { user: { select: { id: true, name: true, email: true } } } },
       items: true,
     },
   });
@@ -115,11 +143,24 @@ router.post('/', asyncHandler(async (req, res) => {
 
 // GET /api/v1/deliveries/:id
 router.get('/:id', asyncHandler(async (req, res) => {
+  const where: Record<string, unknown> = { id: req.params.id, businessId: req.user!.businessId! };
+
+  // Dispatch users can only view deliveries assigned to them
+  if (req.user!.role === 'DISPATCH') {
+    const member = await prisma.businessMember.findFirst({
+      where: { userId: req.user!.userId, businessId: req.user!.businessId! },
+    });
+    if (member) {
+      where.dispatchedToId = member.id;
+    }
+  }
+
   const delivery = await prisma.delivery.findFirst({
-    where: { id: req.params.id, businessId: req.user!.businessId! },
+    where,
     include: {
       customer: true,
       invoice: { select: { id: true, number: true, total: true } },
+      dispatchedTo: { include: { user: { select: { id: true, name: true, email: true } } } },
       items: { include: { product: { select: { id: true, name: true, sku: true } } } },
     },
   });
@@ -138,6 +179,42 @@ router.patch('/:id', asyncHandler(async (req, res) => {
   });
   if (!delivery) return notFound(res, 'Delivery');
 
+  // Dispatch users can only update status of their assigned deliveries
+  if (req.user!.role === 'DISPATCH') {
+    const member = await prisma.businessMember.findFirst({
+      where: { userId: req.user!.userId, businessId: req.user!.businessId! },
+    });
+    if (!member || delivery.dispatchedToId !== member.id) {
+      return error(res, 'FORBIDDEN', 'You can only update deliveries assigned to you', 403);
+    }
+    // Dispatch users can only update status, recipientConfirmation, proofPhotoAttachmentId, and signatureAttachmentId
+    const allowedFields = ['status', 'recipientConfirmation', 'proofPhotoAttachmentId', 'signatureAttachmentId'];
+    for (const key of Object.keys(input)) {
+      if (!allowedFields.includes(key)) {
+        return error(res, 'FORBIDDEN', `Dispatch users cannot update ${key}`, 403);
+      }
+    }
+  }
+
+  // Verify dispatchedToId if provided (only OWNER/MANAGER can assign)
+  let dispatchedToId = undefined;
+  if (input.dispatchedToId !== undefined) {
+    if (req.user!.role === 'DISPATCH') {
+      return error(res, 'FORBIDDEN', 'Dispatch users cannot assign deliveries', 403);
+    }
+    if (input.dispatchedToId === null) {
+      dispatchedToId = null;
+    } else {
+      const assignee = await prisma.businessMember.findFirst({
+        where: { id: input.dispatchedToId, businessId, role: 'DISPATCH' },
+      });
+      if (!assignee) {
+        return error(res, 'INVALID_ASSIGNEE', 'Invalid dispatch user', 400);
+      }
+      dispatchedToId = input.dispatchedToId;
+    }
+  }
+
   if (input.status && !validTransitions[delivery.status].includes(input.status)) {
     return error(res, 'INVALID_TRANSITION', `Cannot transition from ${delivery.status} to ${input.status}`, 400);
   }
@@ -155,11 +232,14 @@ router.patch('/:id', asyncHandler(async (req, res) => {
       ...(input.status ? { status: input.status } : {}),
       ...(input.recipientConfirmation !== undefined ? { recipientConfirmation: input.recipientConfirmation } : {}),
       ...(input.proofPhotoAttachmentId !== undefined ? { proofPhotoAttachmentId: input.proofPhotoAttachmentId } : {}),
+      ...(input.signatureAttachmentId !== undefined ? { signatureAttachmentId: input.signatureAttachmentId } : {}),
       ...(input.status === 'DELIVERED' ? { deliveredAt: new Date() } : {}),
+      ...(dispatchedToId !== undefined ? { dispatchedToId } : {}),
     },
     include: {
       customer: { select: { id: true, name: true, phone: true } },
       invoice: { select: { id: true, number: true } },
+      dispatchedTo: { include: { user: { select: { id: true, name: true, email: true } } } },
       items: true,
     },
   });

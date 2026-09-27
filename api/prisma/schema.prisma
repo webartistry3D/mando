@@ -62,8 +62,9 @@ model BusinessMember {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deliveries  Delivery[] @relation("DeliveryAssignee")
 
   @@unique([businessId, userId])
   @@index([businessId])
@@ -74,6 +75,7 @@ enum Role {
   OWNER
   MANAGER
   STAFF
+  DISPATCH
 }
 
 // === BusinessSettings ===
@@ -368,35 +370,39 @@ model Expense {
 
 // === Delivery ===
 model Delivery {
-  id                     String   @id @default(cuid())
-  businessId             String
-  invoiceId              String?
-  customerId             String?
-  number                 String
-  deliveryAddress        String?
-  recipientName          String?
-  recipientPhone         String?
-  deliveryFee            Decimal  @default(0) @db.Decimal(12, 2)
-  assignedPerson         String?
-  trackingReference      String?
-  status                 DeliveryStatus @default(PENDING)
-  notes                  String?
-  deliveredAt            DateTime?
-  recipientConfirmation   String?
-  proofPhotoAttachmentId String?
-  createdById            String?
-  createdAt              DateTime @default(now())
-  updatedAt              DateTime @updatedAt
+  id                       String   @id @default(cuid())
+  businessId               String
+  invoiceId                String?
+  customerId               String?
+  number                   String
+  deliveryAddress          String?
+  recipientName            String?
+  recipientPhone           String?
+  deliveryFee              Decimal  @default(0) @db.Decimal(12, 2)
+  assignedPerson           String?
+  trackingReference        String?
+  status                   DeliveryStatus @default(PENDING)
+  notes                    String?
+  deliveredAt              DateTime?
+  recipientConfirmation    String?
+  proofPhotoAttachmentId   String?
+  signatureAttachmentId    String?
+  createdById              String?
+  dispatchedToId           String?
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
 
-  business Business      @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  invoice  Invoice?      @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
-  customer Customer?     @relation(fields: [customerId], references: [id], onDelete: SetNull)
-  items    DeliveryItem[]
+  business     Business          @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  invoice      Invoice?          @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+  customer     Customer?         @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  dispatchedTo BusinessMember?   @relation("DeliveryAssignee", fields: [dispatchedToId], references: [id], onDelete: SetNull)
+  items        DeliveryItem[]
 
   @@unique([businessId, number])
   @@index([businessId])
   @@index([invoiceId])
   @@index([customerId])
+  @@index([dispatchedToId])
 }
 
 enum DeliveryStatus {

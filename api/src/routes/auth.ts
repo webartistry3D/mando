@@ -105,6 +105,38 @@ router.get('/me', authRequired, asyncHandler(async (req, res) => {
   return success(res, { user, memberships }, 'Current user retrieved');
 }));
 
+// PATCH /api/v1/auth/password — change password for authenticated user
+router.patch('/password', authRequired, asyncHandler(async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+
+  if (!currentPassword || !newPassword) {
+    return error(res, 'INVALID_INPUT', 'Current and new password are required', 400);
+  }
+
+  if (newPassword.length < 6) {
+    return error(res, 'INVALID_PASSWORD', 'New password must be at least 6 characters', 400);
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: req.user!.userId },
+  });
+
+  if (!user) {
+    return error(res, 'NOT_FOUND', 'User not found', 404);
+  }
+
+  if (!comparePassword(currentPassword, user.passwordHash)) {
+    return error(res, 'INVALID_CREDENTIALS', 'Current password is incorrect', 401);
+  }
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { passwordHash: hashPassword(newPassword) },
+  });
+
+  return success(res, null, 'Password updated successfully');
+}));
+
 // GET /api/v1/auth/google — redirect to Google consent screen
 router.get('/google', (req: Request, res: Response) => {
   const clientId = process.env.GOOGLE_CLIENT_ID;

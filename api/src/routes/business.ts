@@ -152,4 +152,28 @@ router.delete('/members/:id', requireRole('OWNER'), asyncHandler(async (req, res
   return success(res, null, 'Member removed');
 }));
 
+// PATCH /api/v1/business/members/:id/credentials - Update dispatch user credentials
+router.patch('/members/:id/credentials', requireRole('OWNER', 'MANAGER'), asyncHandler(async (req, res) => {
+  const { password } = req.body;
+  if (!password || typeof password !== 'string' || password.length < 6) {
+    return error(res, 'INVALID_PASSWORD', 'Password must be at least 6 characters', 400);
+  }
+
+  const member = await prisma.businessMember.findFirst({
+    where: { id: req.params.id, businessId: req.user!.businessId! },
+    include: { user: true },
+  });
+  if (!member) return notFound(res, 'Member');
+  if (member.role !== 'DISPATCH') {
+    return error(res, 'INVALID_ROLE', 'Credentials can only be updated for dispatch users', 400);
+  }
+
+  await prisma.user.update({
+    where: { id: member.userId },
+    data: { passwordHash: hashPassword(password) },
+  });
+
+  return success(res, null, 'Credentials updated');
+}));
+
 export default router;

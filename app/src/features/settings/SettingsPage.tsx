@@ -1,23 +1,44 @@
 import { useState } from 'react';
-import BusinessSettingsModal from './BusinessSettingsModal';
+import { useAuth } from '@/hooks/useAuth';
+import BusinessProfileModal from './BusinessProfileModal';
+import OperationalSettingsModal from './OperationalSettingsModal';
 import UserManagementModal from './UserManagementModal';
+import DispatchPasswordModal from './DispatchPasswordModal';
 
 export default function SettingsPage() {
+  const { user } = useAuth();
   const [businessOpen, setBusinessOpen] = useState(false);
+  const [operationalOpen, setOperationalOpen] = useState(false);
   const [usersOpen, setUsersOpen] = useState(false);
+  const [passwordOpen, setPasswordOpen] = useState(false);
 
-  const sections = [
-    {
-      title: 'Business Profile',
-      description: 'Name, logo, CAC number, address, contact info',
-      onClick: () => setBusinessOpen(true),
-    },
-    {
-      title: 'Users & Roles',
-      description: 'Manage staff members and their roles',
-      onClick: () => setUsersOpen(true),
-    },
-  ];
+  const isDispatch = user?.role === 'DISPATCH';
+
+  const sections = isDispatch
+    ? [
+        {
+          title: 'Change Password',
+          description: 'Update your account password',
+          onClick: () => setPasswordOpen(true),
+        },
+      ]
+    : [
+        {
+          title: 'Business Profile',
+          description: 'Name, logo, CAC number, address, contact info',
+          onClick: () => setBusinessOpen(true),
+        },
+        {
+          title: 'Operational Settings',
+          description: 'Currency, prefixes, tax, payment instructions',
+          onClick: () => setOperationalOpen(true),
+        },
+        {
+          title: 'Users & Roles',
+          description: 'Manage staff members and their roles',
+          onClick: () => setUsersOpen(true),
+        },
+      ];
 
   return (
     <div className="mx-auto max-w-5xl p-4">
@@ -35,8 +56,14 @@ export default function SettingsPage() {
         ))}
       </div>
 
-      <BusinessSettingsModal open={businessOpen} onClose={() => setBusinessOpen(false)} />
-      <UserManagementModal open={usersOpen} onClose={() => setUsersOpen(false)} />
+      {!isDispatch && (
+        <>
+          <BusinessProfileModal open={businessOpen} onClose={() => setBusinessOpen(false)} />
+          <OperationalSettingsModal open={operationalOpen} onClose={() => setOperationalOpen(false)} />
+          <UserManagementModal open={usersOpen} onClose={() => setUsersOpen(false)} />
+        </>
+      )}
+      {isDispatch && <DispatchPasswordModal open={passwordOpen} onClose={() => setPasswordOpen(false)} />}
     </div>
   );
 }

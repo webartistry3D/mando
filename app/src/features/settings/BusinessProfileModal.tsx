@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '@/lib/api';
-import { X } from 'lucide-react';
+import { X, Upload, X as XIcon } from 'lucide-react';
 
 interface Business {
   id: string;
@@ -14,30 +14,20 @@ interface Business {
   email: string | null;
 }
 
-interface BusinessSettings {
-  id: string;
-  businessId: string;
-  currency: string;
-  invoicePrefix: string;
-  estimatePrefix: string;
-  deliveryPrefix: string;
-  taxEnabled: boolean;
-  taxRate: string;
-  paymentInstructions: string | null;
-}
-
 interface Props {
   open: boolean;
   onClose: () => void;
 }
 
-export default function BusinessSettingsModal({ open, onClose }: Props) {
+export default function BusinessProfileModal({ open, onClose }: Props) {
   const queryClient = useQueryClient();
   const [msg, setMsg] = useState('');
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
 
   const { data: business } = useQuery({
     queryKey: ['business'],
-    queryFn: () => api.get<Business & { settings: BusinessSettings }>('/business'),
+    queryFn: () => api.get<Business>('/business'),
     enabled: open,
   });
 
@@ -49,16 +39,6 @@ export default function BusinessSettingsModal({ open, onClose }: Props) {
     cacNumber: '',
   });
 
-  const [settings, setSettings] = useState({
-    currency: 'NGN',
-    invoicePrefix: 'INV',
-    estimatePrefix: 'EST',
-    deliveryPrefix: 'DEL',
-    taxEnabled: false,
-    taxRate: '0',
-    paymentInstructions: '',
-  });
-
   useEffect(() => {
     if (business) {
       setProfile({
@@ -68,37 +48,65 @@ export default function BusinessSettingsModal({ open, onClose }: Props) {
         address: business.address || '',
         cacNumber: business.cacNumber || '',
       });
-      if (business.settings) {
-        setSettings({
-          currency: business.settings.currency,
-          invoicePrefix: business.settings.invoicePrefix,
-          estimatePrefix: business.settings.estimatePrefix,
-          deliveryPrefix: business.settings.deliveryPrefix,
-          taxEnabled: business.settings.taxEnabled,
-          taxRate: business.settings.taxRate,
-          paymentInstructions: business.settings.paymentInstructions || '',
-        });
+      if (business.logoAttachmentId) {
+        // Fetch the attachment URL
+        api.get<{ url: string }>(`/attachments/${business.logoAttachmentId}/url`)
+          .then((data) => setLogoPreview(data.url))
+          .catch(() => setLogoPreview(null));
       }
     }
   }, [business]);
 
+  const uploadLogo = useMutation({
+    mutationFn: async (file: File) => {
+      const base64 = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.readAsDataURL(file);
+      });
+
+      return api.post<{ id: string }>('/attachments', {
+        entityType: 'BUSINESS',
+        fileName: file.name,
+        mimeType: file.type,
+        fileSize: file.size,
+        fileData: base64,
+      });
+    },
+  });
+
   const updateBusiness = useMutation({
-    mutationFn: (data: Partial<typeof profile>) => api.patch('/business', data),
+    mutationFn: async (data: Partial<typeof profile & { logoAttachmentId: string | null }>) => {
+      let logoAttachmentId = data.logoAttachmentId;
+      if (logoFile) {
+        const uploaded = await uploadLogo.mutateAsync(logoFile);
+        logoAttachmentId = uploaded.id;
+      }
+      return api.patch('/business', { ...data, logoAttachmentId });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['business'] });
       setMsg('Business profile updated');
+      setTimeout(() => {
+        handleClose();
+      }, 1500);
     },
     onError: (err) => setMsg(err instanceof Error ? err.message : 'Update failed'),
   });
 
-  const updateSettings = useMutation({
-    mutationFn: (data: Partial<typeof settings>) => api.patch('/business/settings', data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['business'] });
-      setMsg('Settings updated');
-    },
-    onError: (err) => setMsg(err instanceof Error ? err.message : 'Update failed'),
-  });
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setLogoFile(file);
+      const preview = URL.createObjectURL(file);
+      setLogoPreview(preview);
+    }
+  };
+
+  const handleRemoveLogo = () => {
+    setLogoFile(null);
+    setLogoPreview(null);
+  };
 
   function handleClose() {
     setMsg('');
@@ -125,7 +133,7 @@ export default function BusinessSettingsModal({ open, onClose }: Props) {
             className="relative flex max-h-[80vh] w-full max-w-2xl flex-col rounded-xl border bg-card shadow-3d"
           >
             <div className="flex shrink-0 items-center justify-between border-b px-5 py-3.5">
-              <h2 className="font-semibold">Business Settings</h2>
+              <h2 className="font-semibold">Business Profile</h2>
               <button
                 onClick={handleClose}
                 className="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
@@ -155,16 +163,60 @@ export default function BusinessSettingsModal({ open, onClose }: Props) {
                 transition={{ delay: 0.05 }}
                 className="space-y-4"
               >
-                {/* Business Profile */}
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
-                    updateBusiness.mutate(profile);
+                    updateBusiness.mutate({
+                      ...profile,
+                      logoAttachmentId: logoPreview && !logoFile ? business?.logoAttachmentId : null,
+                    });
                   }}
                   className="rounded-lg border bg-card p-4 space-y-4"
                 >
                   <h3 className="text-lg font-semibold">Business Profile</h3>
                   <div className="space-y-3">
+                    <div>
+                      <label className="text-sm font-medium">Logo</label>
+                      <div className="mt-1 flex items-center gap-4">
+                        {logoPreview ? (
+                          <div className="relative h-20 w-20 rounded-lg border bg-muted overflow-hidden">
+                            <img
+                              src={logoPreview}
+                              alt="Logo preview"
+                              className="h-full w-full object-cover"
+                            />
+                            <button
+                              type="button"
+                              onClick={handleRemoveLogo}
+                              className="absolute right-1 top-1 rounded-full bg-background/80 p-1 hover:bg-background"
+                            >
+                              <XIcon className="h-3 w-3" />
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="h-20 w-20 rounded-lg border border-dashed bg-muted flex items-center justify-center">
+                            <Upload className="h-6 w-6 text-muted-foreground" />
+                          </div>
+                        )}
+                        <div>
+                          <input
+                            type="file"
+                            id="logo"
+                            accept="image/*"
+                            onChange={handleLogoChange}
+                            className="hidden"
+                          />
+                          <label
+                            htmlFor="logo"
+                            className="inline-flex items-center gap-2 rounded-md border bg-background px-3 py-2 text-sm hover:bg-accent cursor-pointer"
+                          >
+                            <Upload className="h-4 w-4" />
+                            {logoPreview ? 'Change Logo' : 'Upload Logo'}
+                          </label>
+                          <p className="text-xs text-muted-foreground mt-1">PNG, JPG up to 2MB</p>
+                        </div>
+                      </div>
+                    </div>
                     <div>
                       <label className="text-sm font-medium">Business Name</label>
                       <input
@@ -218,97 +270,6 @@ export default function BusinessSettingsModal({ open, onClose }: Props) {
                     className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
                   >
                     {updateBusiness.isPending ? 'Saving...' : 'Save Profile'}
-                  </motion.button>
-                </form>
-
-                {/* Operational Settings */}
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    updateSettings.mutate({
-                      ...settings,
-                      taxRate: settings.taxRate,
-                    });
-                  }}
-                  className="rounded-lg border bg-card p-4 space-y-4"
-                >
-                  <h3 className="text-lg font-semibold">Operational Settings</h3>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-sm font-medium">Currency</label>
-                      <input
-                        type="text"
-                        value={settings.currency}
-                        onChange={(e) => setSettings((s) => ({ ...s, currency: e.target.value }))}
-                        className="w-full rounded-md border bg-background px-3 py-2 text-sm mt-1"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium">Invoice Prefix</label>
-                      <input
-                        type="text"
-                        value={settings.invoicePrefix}
-                        onChange={(e) => setSettings((s) => ({ ...s, invoicePrefix: e.target.value }))}
-                        className="w-full rounded-md border bg-background px-3 py-2 text-sm mt-1"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium">Estimate Prefix</label>
-                      <input
-                        type="text"
-                        value={settings.estimatePrefix}
-                        onChange={(e) => setSettings((s) => ({ ...s, estimatePrefix: e.target.value }))}
-                        className="w-full rounded-md border bg-background px-3 py-2 text-sm mt-1"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium">Delivery Prefix</label>
-                      <input
-                        type="text"
-                        value={settings.deliveryPrefix}
-                        onChange={(e) => setSettings((s) => ({ ...s, deliveryPrefix: e.target.value }))}
-                        className="w-full rounded-md border bg-background px-3 py-2 text-sm mt-1"
-                      />
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <label className="flex items-center gap-2 text-sm font-medium">
-                      <input
-                        type="checkbox"
-                        checked={settings.taxEnabled}
-                        onChange={(e) => setSettings((s) => ({ ...s, taxEnabled: e.target.checked }))}
-                        className="rounded"
-                      />
-                      Enable VAT/Tax
-                    </label>
-                    {settings.taxEnabled && (
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={settings.taxRate}
-                        onChange={(e) => setSettings((s) => ({ ...s, taxRate: e.target.value }))}
-                        className="w-24 rounded-md border bg-background px-3 py-2 text-sm"
-                        placeholder="Rate %"
-                      />
-                    )}
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium">Payment Instructions</label>
-                    <textarea
-                      value={settings.paymentInstructions}
-                      onChange={(e) => setSettings((s) => ({ ...s, paymentInstructions: e.target.value }))}
-                      className="w-full rounded-md border bg-background px-3 py-2 text-sm mt-1"
-                      rows={3}
-                      placeholder="Bank name, account number, etc."
-                    />
-                  </div>
-                  <motion.button
-                    whileTap={{ scale: 0.98 }}
-                    type="submit"
-                    disabled={updateSettings.isPending}
-                    className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
-                  >
-                    {updateSettings.isPending ? 'Saving...' : 'Save Settings'}
                   </motion.button>
                 </form>
               </motion.div>

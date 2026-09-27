@@ -135,7 +135,7 @@ export default function DashboardPage() {
     { label: 'Revenue', sub: `${summary.revenue.count} payments this month`, value: summary.revenue.amount, icon: Banknote, cls: 'text-emerald-600 bg-emerald-500/10', trend: 'up' as const },
     { label: 'Expenses', sub: `${summary.expenses.count} recorded this month`, value: summary.expenses.amount, icon: CreditCard, cls: 'text-rose-600 bg-rose-500/10', trend: 'down' as const },
     { label: 'Outstanding', sub: `${summary.outstanding.count} unpaid invoices`, value: summary.outstanding.amount, icon: Clock, cls: 'text-amber-600 bg-amber-500/10', trend: 'flat' as const },
-    { label: 'Profit', sub: 'Revenue minus expenses', value: summary.profit, icon: PiggyBank, cls: summary.profit >= 0 ? 'text-emerald-600 bg-emerald-500/10' : 'text-rose-600 bg-rose-500/10', trend: summary.profit >= 0 ? 'up' as const : 'down' as const },
+    { label: 'Profit', sub: 'Revenue - Expenses', value: summary.profit, icon: PiggyBank, cls: summary.profit >= 0 ? 'text-emerald-600 bg-emerald-500/10' : 'text-rose-600 bg-rose-500/10', trend: summary.profit >= 0 ? 'up' as const : 'down' as const },
   ] : [];
 
   return (

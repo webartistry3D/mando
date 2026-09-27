@@ -7,7 +7,7 @@ export function ProtectedRoute({
   allowedRoles,
 }: {
   children: ReactNode;
-  allowedRoles?: Array<'OWNER' | 'MANAGER' | 'STAFF'>;
+  allowedRoles?: Array<'OWNER' | 'MANAGER' | 'STAFF' | 'DISPATCH'>;
 }) {
   const { isAuthenticated, user } = useAuth();
 
@@ -16,7 +16,9 @@ export function ProtectedRoute({
   }
 
   if (allowedRoles && user?.role && !allowedRoles.includes(user.role)) {
-    return <Navigate to="/invoices" replace />;
+    // Dispatch users fallback to deliveries, others to invoices
+    const fallback = user.role === 'DISPATCH' ? '/deliveries' : '/invoices';
+    return <Navigate to={fallback} replace />;
   }
 
   return <>{children}</>;

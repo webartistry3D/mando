@@ -1,10 +1,13 @@
+import { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { formatCurrency, formatDate } from '@/lib/utils';
-import { ArrowLeft } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { ArrowLeft, User, ChevronDown } from 'lucide-react';
 import type { Delivery } from '@/types';
 import DeliveryMapView from './DeliveryMapView';
+import ProofOfDeliveryModal from './ProofOfDeliveryModal';
 
 const statusColors: Record<string, string> = {
   PENDING: 'bg-gray-100 text-gray-700',
@@ -28,6 +31,9 @@ export default function DeliveryDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const [showProofModal, setShowProofModal] = useState(false);
+  const [showAssignDropdown, setShowAssignDropdown] = useState(false);
 
   const { data: delivery } = useQuery({
     queryKey: ['delivery', id],
@@ -35,10 +41,28 @@ export default function DeliveryDetailPage() {
     enabled: !!id,
   });
 
+  const { data: members } = useQuery({
+    queryKey: ['members'],
+    queryFn: () => api.get<any[]>('/business/members'),
+  });
+
+  const dispatchUsers = members?.filter((m) => m.role === 'DISPATCH') || [];
+
   const updateStatus = useMutation({
     mutationFn: (status: string) => api.patch(`/deliveries/${id}`, { status }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['delivery', id] }),
   });
+
+  const assignDispatch = useMutation({
+    mutationFn: (dispatchedToId: string | null) => api.patch(`/deliveries/${id}`, { dispatchedToId }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['delivery', id] });
+      setShowAssignDropdown(false);
+    },
+  });
+
+  const isDispatch = user?.role === 'DISPATCH';
+  const isOwnerOrManager = user?.role === 'OWNER' || user?.role === 'MANAGER';
 
   if (!delivery) return <div className="p-8 text-center text-muted-foreground">Loading...</div>;
 
@@ -66,11 +90,18 @@ export default function DeliveryDetailPage() {
           </div>
         </div>
         <div className="flex gap-2 flex-wrap justify-end">
-          {nextActions[delivery.status]?.map((a) => (
+          {(!isDispatch || delivery.dispatchedTo) && nextActions[delivery.status]?.map((a) => (
             <button
               key={a.status}
-              onClick={() => updateStatus.mutate(a.status)}
-              className={`rounded-md px-4 py-2 text-sm font-medium text-white ${a.color}`}
+              onClick={() => {
+                if (a.status === 'DELIVERED' && isDispatch) {
+                  setShowProofModal(true);
+                } else {
+                  updateStatus.mutate(a.status);
+                }
+              }}
+              disabled={updateStatus.isPending}
+              className={`rounded-md px-4 py-2 text-sm font-medium text-white ${a.color} disabled:opacity-50`}
             >
               {a.label}
             </button>
@@ -85,6 +116,51 @@ export default function DeliveryDetailPage() {
             {delivery.recipientName && <p><span className="font-medium">Recipient:</span> {delivery.recipientName} {delivery.recipientPhone && `(${delivery.recipientPhone})`}</p>}
             {delivery.deliveryFee > 0 && <p><span className="font-medium">Delivery Fee:</span> <span className="font-mono">{formatCurrency(delivery.deliveryFee)}</span></p>}
             {delivery.assignedPerson && <p><span className="font-medium">Assigned to:</span> {delivery.assignedPerson}</p>}
+            {delivery.dispatchedTo && (
+              <p className="flex items-center gap-2">
+                <span className="font-medium">Dispatch user:</span>
+                <span className="flex items-center gap-1 text-primary">
+                  <User className="h-4 w-4" />
+                  {delivery.dispatchedTo.user.name}
+                </span>
+              </p>
+            )}
+            {isOwnerOrManager && !isDispatch && (
+              <div className="relative">
+                <button
+                  onClick={() => setShowAssignDropdown(!showAssignDropdown)}
+                  className="flex items-center gap-2 text-sm font-medium text-primary hover:underline"
+                >
+                  {delivery.dispatchedTo ? 'Change dispatch user' : 'Assign dispatch user'}
+                  <ChevronDown className="h-4 w-4" />
+                </button>
+                {showAssignDropdown && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-0"
+                      onClick={() => setShowAssignDropdown(false)}
+                    />
+                    <div className="absolute top-full left-0 mt-2 bg-card border rounded-md shadow-lg z-10 w-56">
+                      <button
+                        onClick={() => assignDispatch.mutate(null)}
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-accent"
+                      >
+                        Unassign
+                      </button>
+                      {dispatchUsers.map((member) => (
+                        <button
+                          key={member.id}
+                          onClick={() => assignDispatch.mutate(member.id)}
+                          className="w-full text-left px-3 py-2 text-sm hover:bg-accent"
+                        >
+                          {member.user.name}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
             {delivery.trackingReference && <p><span className="font-medium">Tracking:</span> {delivery.trackingReference}</p>}
             {delivery.invoice && <p><span className="font-medium">Invoice:</span> <Link to={`/invoices/${delivery.invoice.id}`} className="text-primary underline">{delivery.invoice.number}</Link></p>}
             {delivery.deliveredAt && <p><span className="font-medium">Delivered:</span> {formatDate(delivery.deliveredAt)}</p>}
@@ -116,6 +192,12 @@ export default function DeliveryDetailPage() {
           )}
         </div>
       </div>
+
+      <ProofOfDeliveryModal
+        open={showProofModal}
+        onClose={() => setShowProofModal(false)}
+        deliveryId={id!}
+      />
     </div>
   );
 }

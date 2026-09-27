@@ -10,6 +10,7 @@ export const createDeliverySchema = z.object({
   assignedPerson: z.string().optional(),
   trackingReference: z.string().optional(),
   notes: z.string().optional(),
+  dispatchedToId: z.string().nullable().optional(),
   items: z.array(z.object({
     productId: z.string().optional(),
     description: z.string().min(1),
@@ -21,6 +22,8 @@ export const updateDeliverySchema = createDeliverySchema.partial().extend({
   status: z.enum(['PENDING', 'PROCESSING', 'OUT_FOR_DELIVERY', 'DELIVERED', 'FAILED', 'CANCELLED']).optional(),
   recipientConfirmation: z.string().optional(),
   proofPhotoAttachmentId: z.string().optional(),
+  signatureAttachmentId: z.string().optional(),
+  dispatchedToId: z.string().nullable().optional(),
 });
 
 export type CreateDeliveryInput = z.infer<typeof createDeliverySchema>;

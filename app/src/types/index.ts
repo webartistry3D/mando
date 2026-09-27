@@ -3,7 +3,7 @@ export interface User {
   name: string;
   email: string;
   phone?: string | null;
-  role?: 'OWNER' | 'MANAGER' | 'STAFF';
+  role?: 'OWNER' | 'MANAGER' | 'STAFF' | 'DISPATCH';
 }
 
 export interface Business {
@@ -202,11 +202,17 @@ export interface Delivery {
   deliveredAt?: string | null;
   recipientConfirmation?: string | null;
   proofPhotoAttachmentId?: string | null;
+  signatureAttachmentId?: string | null;
+  dispatchedToId?: string | null;
   createdAt: string;
   updatedAt: string;
   items?: DeliveryItem[];
   invoice?: { id: string; number: string; total: number };
   customer?: { id: string; name: string; phone?: string | null };
+  dispatchedTo?: {
+    id: string;
+    user: { id: string; name: string; email: string };
+  };
 }
 
 export interface DeliveryItem {

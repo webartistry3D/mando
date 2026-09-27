@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { prisma } from '../lib/prisma.js';
 import { authRequired, loadBusinessContext } from '../middleware/auth.js';
 import { success, error, notFound, asyncHandler } from '../lib/response.js';
+import { uploadToGCS, deleteFromGCS, getPublicUrl } from '../lib/gcs.js';
 import { z } from 'zod';
 
 const router = Router();
@@ -14,7 +15,7 @@ const createAttachmentSchema = z.object({
   fileName: z.string().min(1),
   mimeType: z.string().min(1),
   fileSize: z.number().int().positive(),
-  storageKey: z.string().min(1),
+  fileData: z.string().min(1), // base64 encoded file data
 });
 
 // GET /api/v1/attachments?entityType=X&entityId=Y
@@ -32,10 +33,22 @@ router.get('/', asyncHandler(async (req, res) => {
   return success(res, attachments);
 }));
 
-// POST /api/v1/attachments — create metadata record (file content sent to GCS separately)
+// POST /api/v1/attachments — upload file to GCS and create metadata record
 router.post('/', asyncHandler(async (req, res) => {
   const input = createAttachmentSchema.parse(req.body);
   const businessId = req.user!.businessId!;
+
+  // Convert base64 to buffer
+  const base64Data = input.fileData.replace(/^data:.*?;base64,/, '');
+  const buffer = Buffer.from(base64Data, 'base64');
+
+  // Generate unique filename
+  const timestamp = Date.now();
+  const randomStr = Math.random().toString(36).substring(2, 10);
+  const fileName = `${businessId}/${timestamp}-${randomStr}-${input.fileName}`;
+
+  // Upload to GCS
+  const storageKey = await uploadToGCS(fileName, input.mimeType, buffer);
 
   const attachment = await prisma.attachment.create({
     data: {
@@ -45,11 +58,11 @@ router.post('/', asyncHandler(async (req, res) => {
       fileName: input.fileName,
       mimeType: input.mimeType,
       fileSize: input.fileSize,
-      storageKey: input.storageKey,
+      storageKey,
       createdById: req.user!.userId,
     },
   });
-  return success(res, attachment, 'Attachment recorded', 201);
+  return success(res, attachment, 'Attachment uploaded', 201);
 }));
 
 // GET /api/v1/attachments/:id
@@ -68,20 +81,21 @@ router.delete('/:id', asyncHandler(async (req, res) => {
   });
   if (!attachment) return notFound(res, 'Attachment');
 
+  // Delete from GCS
+  await deleteFromGCS(attachment.storageKey);
+
   await prisma.attachment.delete({ where: { id: req.params.id } });
   return success(res, null, 'Attachment deleted');
 }));
 
-// GET /api/v1/attachments/:id/url — get signed URL (placeholder for GCS)
+// GET /api/v1/attachments/:id/url — get public URL
 router.get('/:id/url', asyncHandler(async (req, res) => {
   const attachment = await prisma.attachment.findFirst({
     where: { id: req.params.id, businessId: req.user!.businessId! },
   });
   if (!attachment) return notFound(res, 'Attachment');
 
-  // In production, generate a GCS signed URL here.
-  // For now, return the storageKey as the URL reference.
-  return success(res, { url: attachment.storageKey });
+  return success(res, { url: getPublicUrl(attachment.storageKey) });
 }));
 
 export default router;
